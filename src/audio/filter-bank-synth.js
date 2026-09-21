@@ -56,13 +56,14 @@ class SynthVoice {
     this.note = note;
     this.freq = freq;
     this.isReleasing = false;
-    const now = this.ctx.currentTime;
+    // 3ms lookahead buffer ensures zero-latency glitch-free scheduling in audio hardware quantum
+    const now = this.ctx.currentTime + 0.003;
     this.startTime = now;
 
     // Recreate clean oscillator
     if (this.osc) {
       try {
-        this.osc.stop();
+        this.osc.stop(now);
         this.osc.disconnect();
       } catch (e) {}
     }
@@ -89,7 +90,7 @@ class SynthVoice {
     this.voiceGain.gain.setValueAtTime(0.0001, now);
     
     // Attack phase (linear ramp)
-    const attackDuration = Math.max(0.001, env.attack);
+    const attackDuration = Math.max(0.002, env.attack);
     const attackEnd = now + attackDuration;
     this.voiceGain.gain.linearRampToValueAtTime(targetGain, attackEnd);
 
@@ -169,11 +170,15 @@ class SynthVoice {
   stop(presetReleaseTime = 0.2) {
     if (this.isReleasing) return;
     this.isReleasing = true;
-    const now = this.ctx.currentTime;
+    const now = this.ctx.currentTime + 0.003;
 
     const releaseDuration = Math.max(0.04, presetReleaseTime);
-    this.voiceGain.gain.cancelScheduledValues(now);
-    this.voiceGain.gain.setValueAtTime(this.voiceGain.gain.value, now);
+    if (typeof this.voiceGain.gain.cancelAndHoldAtTime === 'function') {
+      this.voiceGain.gain.cancelAndHoldAtTime(now);
+    } else {
+      this.voiceGain.gain.cancelScheduledValues(now);
+      this.voiceGain.gain.setValueAtTime(this.voiceGain.gain.value, now);
+    }
     this.voiceGain.gain.setTargetAtTime(0.0001, now, releaseDuration / 3);
 
     this.releaseTimer = setTimeout(() => {
@@ -194,8 +199,9 @@ class SynthVoice {
       this.osc = null;
     }
     if (this.ctx && this.voiceGain) {
-      this.voiceGain.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.voiceGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      const now = this.ctx.currentTime;
+      this.voiceGain.gain.cancelScheduledValues(now);
+      this.voiceGain.gain.setValueAtTime(0.0001, now);
     }
     this.note = null;
     this.freq = 0;
@@ -218,7 +224,11 @@ export class FilterBankSynth {
 
   init(audioContext) {
     if (this.isInitialized && this.ctx) return;
-    this.ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    // Request lowest latency hardware buffer (interactive = 128/256 frames, shaves off 15-25ms latency)
+    this.ctx = audioContext || new AudioCtxClass({
+      latencyHint: 'interactive',
+    });
 
     // Master Signal Chain:
     // Voices -> Master Bus Gain -> Limiter (0 dBFS protection) -> Master Gain -> Analyser -> Destination
@@ -259,6 +269,30 @@ export class FilterBankSynth {
       return this.ctx.resume();
     }
     return Promise.resolve();
+  }
+
+  async setAudioSink(deviceId) {
+    if (this.ctx && typeof this.ctx.setSinkId === 'function') {
+      try {
+        await this.ctx.setSinkId(deviceId);
+        return true;
+      } catch (err) {
+        console.warn('Failed to setSinkId on AudioContext:', err);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  getAudioLatency() {
+    if (!this.ctx) return { base: 0, output: 0, total: 0 };
+    const base = (this.ctx.baseLatency || 0) * 1000;
+    const output = (this.ctx.outputLatency || 0) * 1000;
+    return {
+      base: parseFloat(base.toFixed(2)),
+      output: parseFloat(output.toFixed(2)),
+      total: parseFloat((base + output).toFixed(2)),
+    };
   }
 
   loadPreset(presetOrId) {

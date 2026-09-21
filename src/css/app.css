@@ -284,6 +284,10 @@ html.dark {
 .piano-key.white-key.key-pressed span {
   color: #040711 !important;
 }
+.piano-key.white-key.key-pressed .hotkey-hint {
+  color: #0369a1 !important;
+  font-weight: 800 !important;
+}
 
 .piano-key.black-key {
   background: #040710 !important;
@@ -293,6 +297,12 @@ html.dark {
 .piano-key.black-key.key-pressed {
   background: #0284c7 !important;
   box-shadow: 0 0 18px rgba(2, 132, 199, 0.95), inset 0 0 8px #38bdf8 !important;
+}
+.piano-key.black-key.key-pressed span {
+  color: #ffffff !important;
+}
+.piano-key.black-key.key-pressed .hotkey-hint {
+  color: #e0f2fe !important;
 }
 
 /* ==========================================================================

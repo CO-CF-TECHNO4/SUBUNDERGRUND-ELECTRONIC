@@ -278,32 +278,33 @@
 
       <!-- Row 4: Polyphonic Touch Piano Keyboard (Zero-Lag Pointer & Touch Handling) -->
       <div
-        class="piano-dock"
+        class="piano-dock no-active-state no-ripple"
         style="height: 95px; flex-shrink: 0; position: relative; border-radius: 7px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.5); user-select: none; touch-action: none;"
       >
-        <div class="piano-keyboard" style="display: flex; height: 100%; position: relative; touch-action: none;">
+        <div class="piano-keyboard no-active-state no-ripple" style="display: flex; height: 100%; position: relative; touch-action: none;">
           <!-- White Keys -->
           ${whiteKeys.map((k) => $h`
             <div
-              class="piano-key white-key"
+              class="piano-key white-key no-active-state no-ripple"
               data-note=${k.note}
               data-freq=${k.freq}
               style="flex: 1; border: 1px solid #1a253a; background: #0d1526; border-radius: 0 0 4px 4px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.04s ease;"
             >
               <span style="font-size: 10px; font-weight: 800; color: #f8fafc; pointer-events: none;">${k.note}</span>
-              <span style="font-size: 7.5px; color: #64748b; pointer-events: none;">[${k.keyChar}]</span>
+              <span class="hotkey-hint" style="font-size: 7.5px; color: #64748b; font-weight: 700; pointer-events: none;">[${k.keyChar}]</span>
             </div>
           `)}
 
           <!-- Black Keys -->
           ${blackKeys.map((k) => $h`
             <div
-              class="piano-key black-key"
+              class="piano-key black-key no-active-state no-ripple"
               data-note=${k.note}
               data-freq=${k.freq}
               style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: #040710; border: 1px solid #1a253a; border-radius: 0 0 3px 3px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 3px; cursor: pointer; transition: background 0.04s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.8);"
             >
-              <span style="font-size: 8.5px; font-weight: 700; color: #94a3b8; pointer-events: none;">${k.note}</span>
+              <span style="font-size: 8px; font-weight: 700; color: #94a3b8; pointer-events: none; line-height: 1.1;">${k.note}</span>
+              <span class="hotkey-hint" style="font-size: 7.5px; color: #38bdf8; font-weight: 800; pointer-events: none; line-height: 1.1;">[${k.keyChar}]</span>
             </div>
           `)}
         </div>
@@ -501,11 +502,11 @@ export default (props, { $, $on, $update }) => {
   ];
 
   const blackKeys = [
-    { note: 'C#4', freq: 277.18, offsetPct: 8 },
-    { note: 'D#4', freq: 311.13, offsetPct: 20.5 },
-    { note: 'F#4', freq: 369.99, offsetPct: 45.5 },
-    { note: 'G#4', freq: 415.30, offsetPct: 58 },
-    { note: 'A#4', freq: 466.16, offsetPct: 70.5 },
+    { note: 'C#4', freq: 277.18, offsetPct: 8, keyChar: 'W' },
+    { note: 'D#4', freq: 311.13, offsetPct: 20.5, keyChar: 'E' },
+    { note: 'F#4', freq: 369.99, offsetPct: 45.5, keyChar: 'T' },
+    { note: 'G#4', freq: 415.30, offsetPct: 58, keyChar: 'Y' },
+    { note: 'A#4', freq: 466.16, offsetPct: 70.5, keyChar: 'U' },
   ];
 
   function openBenchmarkModal() {
@@ -837,11 +838,20 @@ export default (props, { $, $on, $update }) => {
     if (wBadge) wBadge.textContent = w.toUpperCase();
   }
 
+  const keyDomMap = new Map();
+  function initKeyDomMap() {
+    keyDomMap.clear();
+    document.querySelectorAll('.piano-key').forEach((el) => {
+      const note = el.getAttribute('data-note');
+      if (note) keyDomMap.set(note, el);
+    });
+  }
+
   function playNote(note, freq) {
     ensureAudio();
     activeKeys[note] = true;
     synthEngine.triggerAttack(note, freq, 0.85);
-    const keyEl = document.querySelector(`.piano-key[data-note="${note}"]`);
+    const keyEl = keyDomMap.get(note) || document.querySelector(`.piano-key[data-note="${note}"]`);
     if (keyEl) keyEl.classList.add('key-pressed');
     updateVoiceCountBadge(synthEngine.getActiveVoiceCount());
   }
@@ -849,7 +859,7 @@ export default (props, { $, $on, $update }) => {
   function stopNote(note) {
     delete activeKeys[note];
     synthEngine.triggerRelease(note);
-    const keyEl = document.querySelector(`.piano-key[data-note="${note}"]`);
+    const keyEl = keyDomMap.get(note) || document.querySelector(`.piano-key[data-note="${note}"]`);
     if (keyEl) keyEl.classList.remove('key-pressed');
     updateVoiceCountBadge(synthEngine.getActiveVoiceCount());
   }
@@ -904,98 +914,179 @@ export default (props, { $, $on, $update }) => {
     }, 280);
   }
 
-  // Piano Pointer and Keyboard Bindings
+  // Comprehensive physical keyboard hotkeys (supports e.code + Latin + Ukrainian layouts)
   const KEY_NOTE_MAP = {
-    'a': { note: 'C4', freq: 261.63 },
-    'w': { note: 'C#4', freq: 277.18 },
-    's': { note: 'D4', freq: 293.66 },
-    'e': { note: 'D#4', freq: 311.13 },
-    'd': { note: 'E4', freq: 329.63 },
-    'f': { note: 'F4', freq: 349.23 },
-    't': { note: 'F#4', freq: 369.99 },
-    'g': { note: 'G4', freq: 392.00 },
-    'y': { note: 'G#4', freq: 415.30 },
-    'z': { note: 'G#4', freq: 415.30 },
-    'h': { note: 'A4', freq: 440.00 },
-    'u': { note: 'A#4', freq: 466.16 },
-    'j': { note: 'B4', freq: 493.88 },
-    'k': { note: 'C5', freq: 523.25 },
+    // Physical key codes (e.code - independent of system language)
+    KeyA: { note: 'C4', freq: 261.63 },
+    KeyW: { note: 'C#4', freq: 277.18 },
+    KeyS: { note: 'D4', freq: 293.66 },
+    KeyE: { note: 'D#4', freq: 311.13 },
+    KeyD: { note: 'E4', freq: 329.63 },
+    KeyF: { note: 'F4', freq: 349.23 },
+    KeyT: { note: 'F#4', freq: 369.99 },
+    KeyG: { note: 'G4', freq: 392.00 },
+    KeyY: { note: 'G#4', freq: 415.30 },
+    KeyZ: { note: 'G#4', freq: 415.30 }, // German QWERTZ / international fallback
+    KeyH: { note: 'A4', freq: 440.00 },
+    KeyU: { note: 'A#4', freq: 466.16 },
+    KeyJ: { note: 'B4', freq: 493.88 },
+    KeyK: { note: 'C5', freq: 523.25 },
+
+    // Fallback lowercase e.key (English)
+    a: { note: 'C4', freq: 261.63 },
+    w: { note: 'C#4', freq: 277.18 },
+    s: { note: 'D4', freq: 293.66 },
+    e: { note: 'D#4', freq: 311.13 },
+    d: { note: 'E4', freq: 329.63 },
+    f: { note: 'F4', freq: 349.23 },
+    t: { note: 'F#4', freq: 369.99 },
+    g: { note: 'G4', freq: 392.00 },
+    y: { note: 'G#4', freq: 415.30 },
+    z: { note: 'G#4', freq: 415.30 },
+    h: { note: 'A4', freq: 440.00 },
+    u: { note: 'A#4', freq: 466.16 },
+    j: { note: 'B4', freq: 493.88 },
+    k: { note: 'C5', freq: 523.25 },
+
+    // Fallback Ukrainian / Cyrillic keyboard characters
+    ф: { note: 'C4', freq: 261.63 },
+    ц: { note: 'C#4', freq: 277.18 },
+    і: { note: 'D4', freq: 293.66 },
+    ы: { note: 'D4', freq: 293.66 },
+    у: { note: 'D#4', freq: 311.13 },
+    в: { note: 'E4', freq: 329.63 },
+    а: { note: 'F4', freq: 349.23 },
+    е: { note: 'F#4', freq: 369.99 },
+    п: { note: 'G4', freq: 392.00 },
+    н: { note: 'G#4', freq: 415.30 },
+    я: { note: 'G#4', freq: 415.30 },
+    р: { note: 'A4', freq: 440.00 },
+    г: { note: 'A#4', freq: 466.16 },
+    о: { note: 'B4', freq: 493.88 },
+    л: { note: 'C5', freq: 523.25 },
   };
 
-  let activePointerNote = null;
-  let isPointerActive = false;
+  const heldPhysicalKeys = new Map(); // e.code -> note
+  let keyboardRect = null;
+  const activePointers = new Map(); // pointerId -> note
 
-  function getKeyAtPoint(clientX, clientY) {
-    const el = document.elementFromPoint(clientX, clientY);
-    if (!el) return null;
-    return el.closest('.piano-key');
+  function getKeyFromCoords(clientX, clientY) {
+    if (!keyboardRect) {
+      const keyboardEl = document.querySelector('.piano-keyboard');
+      if (keyboardEl) keyboardRect = keyboardEl.getBoundingClientRect();
+      if (!keyboardRect) return null;
+    }
+    const { left, top, width, height, right, bottom } = keyboardRect;
+    if (clientX < left || clientX > right || clientY < top || clientY > bottom) {
+      return null;
+    }
+    const relX = (clientX - left) / width;
+    const relY = (clientY - top) / height;
+
+    // Check black keys if in upper 62% of keyboard
+    if (relY <= 0.62) {
+      if (relX >= 0.075 && relX <= 0.170) return blackKeys[0];
+      if (relX >= 0.200 && relX <= 0.295) return blackKeys[1];
+      if (relX >= 0.450 && relX <= 0.545) return blackKeys[2];
+      if (relX >= 0.575 && relX <= 0.670) return blackKeys[3];
+      if (relX >= 0.700 && relX <= 0.795) return blackKeys[4];
+    }
+
+    // Otherwise white key (8 keys evenly distributed)
+    const whiteIdx = Math.max(0, Math.min(7, Math.floor(relX * 8)));
+    return whiteKeys[whiteIdx];
   }
 
   function onKeyboardPointerDown(e) {
     e.preventDefault();
-    isPointerActive = true;
-    const keyEl = getKeyAtPoint(e.clientX, e.clientY);
-    if (!keyEl) return;
-    const note = keyEl.getAttribute('data-note');
-    const freq = parseFloat(keyEl.getAttribute('data-freq'));
-    if (!note || isNaN(freq)) return;
-    activePointerNote = note;
-    playNote(note, freq);
+    const keyboardEl = e.currentTarget;
+    keyboardRect = keyboardEl.getBoundingClientRect();
+    if (keyboardEl.setPointerCapture) {
+      try {
+        keyboardEl.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+
+    let note = null;
+    let freq = null;
+
+    const keyEl = e.target.closest('.piano-key');
+    if (keyEl) {
+      note = keyEl.getAttribute('data-note');
+      freq = parseFloat(keyEl.getAttribute('data-freq'));
+    } else {
+      const k = getKeyFromCoords(e.clientX, e.clientY);
+      if (k) {
+        note = k.note;
+        freq = k.freq;
+      }
+    }
+
+    if (note && !isNaN(freq)) {
+      activePointers.set(e.pointerId, note);
+      playNote(note, freq);
+    }
   }
 
   function onKeyboardPointerMove(e) {
-    if (!isPointerActive) return;
-    if (e.pointerType === 'mouse' && e.buttons !== 1) {
-      onKeyboardPointerUp();
-      return;
-    }
-    const keyEl = getKeyAtPoint(e.clientX, e.clientY);
-    if (!keyEl) {
-      if (activePointerNote) {
-        stopNote(activePointerNote);
-        activePointerNote = null;
+    if (!activePointers.has(e.pointerId)) return;
+    const currentNote = activePointers.get(e.pointerId);
+    const k = getKeyFromCoords(e.clientX, e.clientY);
+
+    if (k) {
+      if (k.note !== currentNote) {
+        stopNote(currentNote);
+        activePointers.set(e.pointerId, k.note);
+        playNote(k.note, k.freq);
       }
-      return;
-    }
-    const note = keyEl.getAttribute('data-note');
-    const freq = parseFloat(keyEl.getAttribute('data-freq'));
-    if (note && note !== activePointerNote) {
-      if (activePointerNote) stopNote(activePointerNote);
-      activePointerNote = note;
-      if (!isNaN(freq)) playNote(note, freq);
+    } else {
+      stopNote(currentNote);
+      activePointers.delete(e.pointerId);
     }
   }
 
-  function onKeyboardPointerUp() {
-    isPointerActive = false;
-    if (activePointerNote) {
-      stopNote(activePointerNote);
-      activePointerNote = null;
+  function onKeyboardPointerUp(e) {
+    if (activePointers.has(e.pointerId)) {
+      const note = activePointers.get(e.pointerId);
+      stopNote(note);
+      activePointers.delete(e.pointerId);
+    }
+    const keyboardEl = document.querySelector('.piano-keyboard');
+    if (keyboardEl && keyboardEl.releasePointerCapture) {
+      try {
+        keyboardEl.releasePointerCapture(e.pointerId);
+      } catch (err) {}
     }
   }
 
   function onWindowKeyDown(e) {
     if (e.repeat) return;
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-    const key = e.key.toLowerCase();
-    const mapping = KEY_NOTE_MAP[key];
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
+    const mapping = KEY_NOTE_MAP[e.code] || (e.key ? KEY_NOTE_MAP[e.key.toLowerCase()] : null);
     if (mapping) {
       e.preventDefault();
+      heldPhysicalKeys.set(e.code || e.key, mapping.note);
       playNote(mapping.note, mapping.freq);
     }
   }
 
   function onWindowKeyUp(e) {
-    const key = e.key.toLowerCase();
-    const mapping = KEY_NOTE_MAP[key];
-    if (mapping) {
+    const keyId = e.code || e.key;
+    let note = heldPhysicalKeys.get(keyId);
+    if (!note) {
+      const mapping = KEY_NOTE_MAP[e.code] || (e.key ? KEY_NOTE_MAP[e.key.toLowerCase()] : null);
+      if (mapping) note = mapping.note;
+    }
+    if (note) {
       e.preventDefault();
-      stopNote(mapping.note);
+      heldPhysicalKeys.delete(keyId);
+      stopNote(note);
     }
   }
 
   $on('pageInit', () => {
     ensureAudio();
+    initKeyDomMap();
 
     // Start Real-Time FPS and Frame-Time HUD Monitor (Direct DOM update, zero VDOM diff)
     perfMonitor.start(({ fps, frameTime }) => {
@@ -1012,14 +1103,15 @@ export default (props, { $, $on, $update }) => {
       }
     });
 
-    // Attach Zero-Lag Touch & Pointer Piano Keyboard Listeners
+    // Attach Zero-Lag Touch & Pointer Piano Keyboard Listeners directly on element
     const keyboardEl = document.querySelector('.piano-keyboard');
     if (keyboardEl) {
       keyboardEl.addEventListener('pointerdown', onKeyboardPointerDown);
+      keyboardEl.addEventListener('pointermove', onKeyboardPointerMove);
+      keyboardEl.addEventListener('pointerup', onKeyboardPointerUp);
+      keyboardEl.addEventListener('pointercancel', onKeyboardPointerUp);
+      keyboardEl.addEventListener('lostpointercapture', onKeyboardPointerUp);
     }
-    window.addEventListener('pointermove', onKeyboardPointerMove);
-    window.addEventListener('pointerup', onKeyboardPointerUp);
-    window.addEventListener('pointercancel', onKeyboardPointerUp);
 
     // Attach Physical Computer Keyboard Listeners
     window.addEventListener('keydown', onWindowKeyDown);
@@ -1082,10 +1174,11 @@ export default (props, { $, $on, $update }) => {
     const keyboardEl = document.querySelector('.piano-keyboard');
     if (keyboardEl) {
       keyboardEl.removeEventListener('pointerdown', onKeyboardPointerDown);
+      keyboardEl.removeEventListener('pointermove', onKeyboardPointerMove);
+      keyboardEl.removeEventListener('pointerup', onKeyboardPointerUp);
+      keyboardEl.removeEventListener('pointercancel', onKeyboardPointerUp);
+      keyboardEl.removeEventListener('lostpointercapture', onKeyboardPointerUp);
     }
-    window.removeEventListener('pointermove', onKeyboardPointerMove);
-    window.removeEventListener('pointerup', onKeyboardPointerUp);
-    window.removeEventListener('pointercancel', onKeyboardPointerUp);
     window.removeEventListener('keydown', onWindowKeyDown);
     window.removeEventListener('keyup', onWindowKeyUp);
 
