@@ -1,202 +1,211 @@
 <template>
-  <div class="page page-audio-workshop">
+  <div class="page page-audio-workshop" style="height: 100%; overflow: hidden;">
+    <!-- Compact Top Navbar -->
     <div class="navbar">
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
-          <span class="badge color-green margin-right-half">
-            <i class="icon t4-icons" style="font-size: 14px; vertical-align: middle;">waveform_path</i>
+          <span class="badge color-green">
+            <i class="icon t4-icons" style="font-size: 13px; vertical-align: middle;">waveform_path</i>
             8-FILTER SYNTH
           </span>
         </div>
-        <div class="title">Audio Workshop</div>
+        <div class="title" style="font-size: 15px; font-weight: 700;">SUBUNDERGRUND AUDIO WORKSHOP</div>
         <div class="right">
-          <button class="button button-small button-outline color-red" @click=${panicAllNotesOff}>
-            PANIC
+          <button class="button button-small button-fill color-red" style="font-size: 11px; height: 26px; line-height: 26px;" @click=${panicAllNotesOff}>
+            PANIC OFF
           </button>
         </div>
       </div>
     </div>
 
-    <div class="page-content">
-      <!-- 1. Real-Time Canvas Oscilloscope -->
-      <div class="block-title block-title-medium">
-        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">waveform_path</i>
-        Real-Time DSP Oscilloscope
+    <!-- 100% Height Non-Scrolling View Container -->
+    <div
+      class="page-content"
+      style="height: 100%; max-height: 100%; overflow: hidden !important; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; padding: calc(var(--t4-page-navbar-offset, 44px) + 4px) 6px calc(var(--t4-page-toolbar-bottom-offset, 48px) + 4px) 6px !important; gap: 4px;"
+    >
+      <!-- Row 1: Compact 8 Instrument Presets Bar -->
+      <div
+        class="presets-bar"
+        style="display: flex; gap: 4px; overflow-x: auto; flex-shrink: 0; padding: 2px 0; -webkit-overflow-scrolling: touch; scrollbar-width: none;"
+      >
+        ${presets.map((p) => $h`
+          <button
+            class="button button-small ${p.id === activePreset.id ? 'button-fill color-blue' : 'button-outline color-gray'}"
+            style="flex: 1; min-width: 105px; height: 30px; line-height: 28px; padding: 0 6px; font-size: 11px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 6px;"
+            @click=${() => selectInstrument(p.id)}
+          >
+            <i class="icon t4-icons" style="font-size: 13px;">${p.icon || 'waveform_path'}</i>
+            <span>${p.name}</span>
+          </button>
+        `)}
       </div>
-      <div class="block block-strong inset no-margin-bottom">
-        <div class="oscilloscope-wrapper" style="position: relative; background: #080c14; border-radius: 10px; overflow: hidden; padding: 4px;">
-          <canvas id="audio-workshop-canvas" style="width: 100%; height: 140px; display: block;"></canvas>
-          <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; flex-wrap: wrap;">
-            <span class="badge color-blue">${activePreset.name}</span>
-            <span class="badge color-purple">${activePreset.waveform.toUpperCase()}</span>
-            <span class="badge ${activeVoiceCount > 0 ? 'color-green' : 'color-gray'}">Voices: ${activeVoiceCount}</span>
+
+      <!-- Row 2: Oscilloscope & Master Control Deck (Split View) -->
+      <div style="display: flex; gap: 6px; flex-shrink: 0; height: 82px;">
+        <!-- Left: Real-time Oscilloscope -->
+        <div style="flex: 1; position: relative; background: #080c14; border-radius: 8px; overflow: hidden; border: 1px solid #1e293b;">
+          <canvas id="audio-workshop-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+          <div style="position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; pointer-events: none;">
+            <span class="badge color-blue" style="font-size: 9px; padding: 1px 4px;">${activePreset.name}</span>
+            <span class="badge color-purple" style="font-size: 9px; padding: 1px 4px;">${activePreset.waveform.toUpperCase()}</span>
+            <span class="badge ${activeVoiceCount > 0 ? 'color-green' : 'color-gray'}" style="font-size: 9px; padding: 1px 4px;">VOICES: ${activeVoiceCount}</span>
+          </div>
+        </div>
+
+        <!-- Right: Compact Waveform & Master Controls -->
+        <div style="width: 200px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between; background: rgba(0,0,0,0.04); border-radius: 8px; padding: 4px 6px; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.06);">
+          <!-- Waveform segmented buttons -->
+          <div class="segmented segmented-raised" style="height: 22px;">
+            <button class="button ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" style="font-size: 10px; line-height: 20px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
+            <button class="button ${activePreset.waveform === 'square' ? 'button-active' : ''}" style="font-size: 10px; line-height: 20px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
+            <button class="button ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" style="font-size: 10px; line-height: 20px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
+            <button class="button ${activePreset.waveform === 'sine' ? 'button-active' : ''}" style="font-size: 10px; line-height: 20px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
+          </div>
+
+          <!-- Master Volume Slider -->
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <i class="icon t4-icons" style="font-size: 13px; color: #64748b;">speaker_2</i>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value=${masterVol}
+              style="flex: 1; height: 3px;"
+              @input=${onMasterVolumeChange}
+            />
+            <span style="font-size: 9px; font-weight: 700; width: 24px; text-align: right;">${masterVol}%</span>
+          </div>
+
+          <!-- Play Scale & Stop Buttons -->
+          <div style="display: flex; gap: 4px;">
+            <button
+              class="button button-small button-fill ${isDemoPlaying ? 'color-orange' : 'color-blue'}"
+              style="flex: 1; height: 22px; line-height: 22px; font-size: 10px; padding: 0 4px;"
+              @click=${playDemoMelody}
+            >
+              <i class="icon t4-icons" style="font-size: 12px; vertical-align: middle; margin-right: 2px;">${isDemoPlaying ? 'stop_fill' : 'play_fill'}</i>
+              ${isDemoPlaying ? 'Stop Scale' : 'Demo Scale'}
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- 2. Eight Factory Instrument Presets Grid -->
-      <div class="block-title block-title-medium display-flex justify-content-space-between align-items-center">
-        <span>
-          <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">tuningfork</i>
-          8 Базових Інструментів (Presets)
-        </span>
-        <span class="badge color-teal">${activePreset.category}</span>
-      </div>
-      <div class="block block-strong inset">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 8px;">
-          ${presets.map((p) => $h`
+      <!-- Row 3: 8-Filter Bank Modular Rack (8 Vertical Channel Strips) -->
+      <div
+        class="filter-rack-panel"
+        style="flex: 1; min-height: 120px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 4px 6px; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;"
+      >
+        <!-- Rack Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 11px; flex-shrink: 0;">
+          <span style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
+            <i class="icon t4-icons" style="font-size: 13px; color: #0284c7;">cpu</i>
+            8-FILTER MODULAR RACK
+          </span>
+          <span style="color: #64748b; font-size: 10px; font-style: italic;">${activePreset.description}</span>
+        </div>
+
+        <!-- 8 Filter Channel Strips Grid -->
+        <div
+          class="filter-strips-grid"
+          style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; flex: 1; height: 100%; min-height: 0;"
+        >
+          ${activePreset.filters.map((f, idx) => $h`
             <div
-              class="card no-margin ${p.id === activePreset.id ? 'card-outline' : ''}"
-              style="cursor: pointer; border-radius: 10px; background: ${p.id === activePreset.id ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0,0,0,0.03)'}; border: ${p.id === activePreset.id ? '2px solid #007aff' : '1px solid rgba(0,0,0,0.08)'}; transition: all 0.15s ease;"
-              @click=${() => selectInstrument(p.id)}
+              class="filter-channel-strip"
+              style="background: ${f.bypass ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.85)'}; border: 1px solid ${f.bypass ? '#cbd5e1' : '#38bdf8'}; border-radius: 6px; padding: 3px 4px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; opacity: ${f.bypass ? 0.55 : 1.0}; transition: all 0.1s ease; overflow: hidden;"
             >
-              <div class="card-content card-content-padding" style="padding: 10px 8px; text-align: center;">
-                <i class="icon t4-icons text-color-${p.color || 'blue'}" style="font-size: 24px;">${p.icon || 'waveform_path'}</i>
-                <div style="font-weight: 700; font-size: 12px; margin-top: 4px; line-height: 1.2;">${p.name}</div>
-                <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${p.category}</div>
+              <!-- Strip Top: # and Bypass button -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                <span style="font-size: 10px; font-weight: 800; color: #0f172a;">#${f.id}</span>
+                <button
+                  class="button button-small ${f.bypass ? 'color-gray' : 'button-fill color-green'}"
+                  style="height: 15px; line-height: 15px; font-size: 8px; padding: 0 4px; border-radius: 3px; min-width: 24px;"
+                  @click=${() => toggleFilterBypass(idx)}
+                >
+                  ${f.bypass ? 'OFF' : 'ON'}
+                </button>
+              </div>
+
+              <!-- Strip Filter Type Badge -->
+              <div style="text-align: center; margin: 1px 0; flex-shrink: 0;">
+                <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 8px; padding: 0 4px; height: 14px; line-height: 14px; text-transform: uppercase;">
+                  ${f.type}
+                </span>
+              </div>
+
+              <!-- Value Readout -->
+              <div style="text-align: center; font-size: 9px; font-family: monospace; font-weight: 700; color: #0284c7; margin: 1px 0; flex-shrink: 0; white-space: nowrap; overflow: hidden;">
+                ${f.tracking ? `×${f.freqMult}` : `${f.freqHz >= 1000 ? (f.freqHz/1000).toFixed(1)+'k' : f.freqHz}Hz`}
+              </div>
+
+              <!-- Freq / Mult slider -->
+              <div style="display: flex; flex-direction: column; align-items: center; margin: 1px 0; flex: 1; justify-content: center;">
+                <span style="font-size: 7px; color: #64748b; line-height: 1;">FREQ</span>
+                <input
+                  type="range"
+                  min=${f.tracking ? "0.5" : "40"}
+                  max=${f.tracking ? "16.0" : "12000"}
+                  step=${f.tracking ? "0.1" : "20"}
+                  value=${f.tracking ? f.freqMult : f.freqHz}
+                  style="width: 100%; height: 3px; margin: 2px 0;"
+                  @input=${(e) => onFilterFreqChange(idx, parseFloat(e.target.value))}
+                />
+              </div>
+
+              <!-- Q Resonance slider -->
+              <div style="display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+                <div style="display: flex; justify-content: space-between; width: 100%; font-size: 7px; color: #64748b; line-height: 1;">
+                  <span>Q</span>
+                  <span style="font-weight: 700; color: #334155;">${f.q}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="20.0"
+                  step="0.2"
+                  value=${f.q}
+                  style="width: 100%; height: 3px; margin-top: 1px;"
+                  @input=${(e) => onFilterQChange(idx, parseFloat(e.target.value))}
+                />
               </div>
             </div>
           `)}
         </div>
-        <div class="margin-top-half" style="font-size: 12px; color: #475569; font-style: italic;">
-          ${activePreset.description}
-        </div>
       </div>
 
-      <!-- 3. Modular 8-Filter Bank Rack -->
-      <div class="block-title block-title-medium display-flex justify-content-space-between align-items-center">
-        <span>
-          <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">cpu</i>
-          Банк з 8 Фільтрів (8-Filter Bank Rack)
-        </span>
-        <button class="button button-small button-outline color-blue" @click=${() => { showFilterRack = !showFilterRack; $update(); }}>
-          ${showFilterRack ? 'Згорнути' : 'Розгорнути'}
-        </button>
-      </div>
+      <!-- Row 4: Polyphonic Touch Piano Keyboard (Bottom Docked) -->
+      <div
+        class="piano-dock"
+        style="height: 110px; flex-shrink: 0; position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); user-select: none; touch-action: none;"
+      >
+        <div class="piano-keyboard" style="display: flex; height: 100%; position: relative;">
+          <!-- White Keys -->
+          ${whiteKeys.map((k) => $h`
+            <div
+              class="piano-key white-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
+              style="flex: 1; border: 1px solid #cbd5e1; background: ${activeKeys[k.note] ? '#38bdf8' : '#ffffff'}; border-radius: 0 0 5px 5px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 6px; cursor: pointer; transition: background 0.04s ease;"
+              @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
+              @pointerup=${(e) => onKeyPointerUp(e, k.note)}
+              @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
+            >
+              <span style="font-size: 11px; font-weight: 800; color: #1e293b;">${k.note}</span>
+              <span style="font-size: 8px; color: #94a3b8;">[${k.keyChar}]</span>
+            </div>
+          `)}
 
-      ${showFilterRack ? $h`
-        <div class="block block-strong inset filter-rack-container" style="padding: 10px 8px;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
-            ${activePreset.filters.map((f, idx) => $h`
-              <div
-                class="filter-slot-card"
-                style="background: ${f.bypass ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.05)'}; border: 1px solid ${f.bypass ? '#cbd5e1' : '#38bdf8'}; border-radius: 8px; padding: 8px 10px; opacity: ${f.bypass ? 0.6 : 1.0}; position: relative;"
-              >
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="font-weight: 700; font-size: 12px;">#${f.id} ${f.name}</span>
-                  <div style="display: flex; gap: 4px; align-items: center;">
-                    <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 10px;">
-                      ${f.type.toUpperCase()}
-                    </span>
-                    <button
-                      class="button button-small ${f.bypass ? 'button-outline color-gray' : 'button-fill color-green'}"
-                      style="font-size: 10px; height: 20px; line-height: 20px; padding: 0 6px;"
-                      @click=${() => toggleFilterBypass(idx)}
-                    >
-                      ${f.bypass ? 'BYPASS' : 'ON'}
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Frequency Mode (Tracking vs Fixed) -->
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-                  <span>Режим: <b>${f.tracking ? `Harmonic ×${f.freqMult}` : `${f.freqHz} Hz`}</b></span>
-                  <span>Q: <b>${f.q}</b>${f.gain !== 0 ? ` | Gain: ${f.gain}dB` : ''}</span>
-                </div>
-
-                <!-- Live Knobs / Sliders for this filter -->
-                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-                  <span style="font-size: 10px; color: #64748b; width: 45px;">Freq/Mult</span>
-                  <input
-                    type="range"
-                    min=${f.tracking ? "0.5" : "40"}
-                    max=${f.tracking ? "16.0" : "12000"}
-                    step=${f.tracking ? "0.1" : "20"}
-                    value=${f.tracking ? f.freqMult : f.freqHz}
-                    style="flex: 1; height: 4px;"
-                    @input=${(e) => onFilterFreqChange(idx, parseFloat(e.target.value))}
-                  />
-                </div>
-
-                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
-                  <span style="font-size: 10px; color: #64748b; width: 45px;">Res (Q)</span>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="20.0"
-                    step="0.2"
-                    value=${f.q}
-                    style="flex: 1; height: 4px;"
-                    @input=${(e) => onFilterQChange(idx, parseFloat(e.target.value))}
-                  />
-                </div>
-              </div>
-            `)}
-          </div>
-        </div>
-      ` : $h``}
-
-      <!-- 4. Global Waveform & Master Controls -->
-      <div class="block-title block-title-medium">
-        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">knob</i>
-        Форма Хвилі та Керування
-      </div>
-      <div class="block block-strong inset">
-        <div class="margin-bottom-half font-bold">Опорний генератор (Waveform):</div>
-        <div class="segmented segmented-raised margin-bottom">
-          <button class="button ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" @click=${() => setWaveform('sawtooth')}>SAW</button>
-          <button class="button ${activePreset.waveform === 'square' ? 'button-active' : ''}" @click=${() => setWaveform('square')}>SQR</button>
-          <button class="button ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" @click=${() => setWaveform('triangle')}>TRI</button>
-          <button class="button ${activePreset.waveform === 'sine' ? 'button-active' : ''}" @click=${() => setWaveform('sine')}>SIN</button>
-        </div>
-
-        <div class="grid grid-cols-2 grid-gap margin-top">
-          <button class="button button-fill button-raised" @click=${playDemoMelody}>
-            <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">${isDemoPlaying ? 'stop_fill' : 'play_fill'}</i>
-            ${isDemoPlaying ? 'Stop Melody' : 'Play Demo Scale'}
-          </button>
-          <button class="button button-outline" @click=${panicAllNotesOff}>
-            Panic All Notes Off
-          </button>
-        </div>
-      </div>
-
-      <!-- 5. Polyphonic Touch Piano Keyboard (C4 - C5) -->
-      <div class="block-title block-title-medium">
-        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">tuningfork</i>
-        Поліфонічна клавіатура (C4 - C5)
-      </div>
-      <div class="block block-strong inset piano-block-container" style="padding: 12px 6px; overflow-x: auto;">
-        <div class="piano-keyboard-wrapper" style="position: relative; height: 140px; min-width: 320px; user-select: none; touch-action: none;">
-          <div class="piano-keyboard" style="display: flex; height: 100%; position: relative;">
-            <!-- White Keys -->
-            ${whiteKeys.map((k) => $h`
-              <div
-                class="piano-key white-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
-                style="flex: 1; border: 1px solid #cbd5e1; background: ${activeKeys[k.note] ? '#38bdf8' : '#fff'}; border-radius: 0 0 6px 6px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 8px; cursor: pointer; transition: background 0.05s;"
-                @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
-                @pointerup=${(e) => onKeyPointerUp(e, k.note)}
-                @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
-              >
-                <span style="font-size: 11px; font-weight: 700; color: #1e293b;">${k.note}</span>
-                <span style="font-size: 9px; color: #64748b;">[${k.keyChar}]</span>
-              </div>
-            `)}
-
-            <!-- Black Keys -->
-            ${blackKeys.map((k) => $h`
-              <div
-                class="piano-key black-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
-                style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: ${activeKeys[k.note] ? '#0284c7' : '#0f172a'}; border-radius: 0 0 4px 4px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.05s;"
-                @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
-                @pointerup=${(e) => onKeyPointerUp(e, k.note)}
-                @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
-              >
-                <span style="font-size: 10px; font-weight: 700; color: #f8fafc;">${k.note}</span>
-              </div>
-            `)}
-          </div>
+          <!-- Black Keys -->
+          ${blackKeys.map((k) => $h`
+            <div
+              class="piano-key black-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
+              style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 62%; background: ${activeKeys[k.note] ? '#0284c7' : '#0f172a'}; border-radius: 0 0 4px 4px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.04s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+              @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
+              @pointerup=${(e) => onKeyPointerUp(e, k.note)}
+              @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
+            >
+              <span style="font-size: 9px; font-weight: 700; color: #f8fafc;">${k.note}</span>
+            </div>
+          `)}
         </div>
       </div>
     </div>
@@ -210,7 +219,7 @@ export default (props, { $, $on, $update }) => {
   let isDemoPlaying = false;
   let demoTimerId = null;
   let animFrameId = null;
-  let showFilterRack = true;
+  let masterVol = 75;
 
   const presets = INSTRUMENT_PRESETS;
   let activePreset = synthEngine.getActivePreset();
@@ -317,6 +326,12 @@ export default (props, { $, $on, $update }) => {
     ensureAudio();
     activePreset.waveform = w;
     synthEngine.setWaveform(w);
+    $update();
+  }
+
+  function onMasterVolumeChange(e) {
+    masterVol = parseInt(e.target.value, 10);
+    synthEngine.setVolume(masterVol);
     $update();
   }
 
