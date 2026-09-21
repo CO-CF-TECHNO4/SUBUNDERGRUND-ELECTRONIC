@@ -21,6 +21,9 @@ class SynthVoice {
     this.startTime = 0;
     this.isReleasing = false;
     this.releaseTimer = null;
+    this.cutoffBias = 1.0;
+    this.resonanceBias = 1.0;
+    this.detune = 0;
 
     // Node chain
     this.osc = null;
@@ -114,18 +117,18 @@ class SynthVoice {
 
       node.type = cfg.type;
 
-      // Tracking frequency vs Fixed frequency
+      // Tracking frequency vs Fixed frequency with Cutoff Bias multiplier
       let targetFreq = 1000;
       if (cfg.tracking) {
         const mult = Number(cfg.freqMult) || 1.0;
-        targetFreq = baseFreq * mult;
+        targetFreq = baseFreq * mult * this.cutoffBias;
       } else {
-        targetFreq = Number(cfg.freqHz) || 1000;
+        targetFreq = (Number(cfg.freqHz) || 1000) * this.cutoffBias;
       }
       targetFreq = Math.max(20, Math.min(20000, targetFreq));
 
       node.frequency.setTargetAtTime(targetFreq, now, 0.01);
-      node.Q.setTargetAtTime(Math.max(0.1, Math.min(30, cfg.q ?? 1)), now, 0.01);
+      node.Q.setTargetAtTime(Math.max(0.1, Math.min(30, (cfg.q ?? 1) * this.resonanceBias)), now, 0.01);
       node.gain.setTargetAtTime(Math.max(-40, Math.min(24, cfg.gain ?? 0)), now, 0.01);
     }
   }
@@ -145,14 +148,14 @@ class SynthVoice {
     node.type = cfg.type;
     let targetFreq = 1000;
     if (cfg.tracking) {
-      targetFreq = (this.freq || 440) * (Number(cfg.freqMult) || 1.0);
+      targetFreq = (this.freq || 440) * (Number(cfg.freqMult) || 1.0) * this.cutoffBias;
     } else {
-      targetFreq = Number(cfg.freqHz) || 1000;
+      targetFreq = (Number(cfg.freqHz) || 1000) * this.cutoffBias;
     }
     targetFreq = Math.max(20, Math.min(20000, targetFreq));
 
     node.frequency.setTargetAtTime(targetFreq, now, 0.01);
-    node.Q.setTargetAtTime(Math.max(0.1, Math.min(30, cfg.q ?? 1)), now, 0.01);
+    node.Q.setTargetAtTime(Math.max(0.1, Math.min(30, (cfg.q ?? 1) * this.resonanceBias)), now, 0.01);
     node.gain.setTargetAtTime(Math.max(-40, Math.min(24, cfg.gain ?? 0)), now, 0.01);
   }
 
@@ -338,6 +341,36 @@ export class FilterBankSynth {
     if (!this.masterGain || !this.ctx) return;
     const val = Math.max(0, Math.min(1.0, volPercent / 100));
     this.masterGain.gain.setTargetAtTime(val, this.ctx.currentTime, 0.02);
+  }
+
+  setCutoffBias(factor) {
+    const clamped = Math.max(0.1, Math.min(4.0, factor));
+    this.voices.forEach((v) => { v.cutoffBias = clamped; });
+    const now = this.ctx ? this.ctx.currentTime : 0;
+    this.activeVoiceMap.forEach((voice) => {
+      voice.cutoffBias = clamped;
+      voice.applyFilters(this.activePreset.filters, voice.freq, now);
+    });
+  }
+
+  setResonanceBias(factor) {
+    const clamped = Math.max(0.1, Math.min(4.0, factor));
+    this.voices.forEach((v) => { v.resonanceBias = clamped; });
+    const now = this.ctx ? this.ctx.currentTime : 0;
+    this.activeVoiceMap.forEach((voice) => {
+      voice.resonanceBias = clamped;
+      voice.applyFilters(this.activePreset.filters, voice.freq, now);
+    });
+  }
+
+  setDetune(cents) {
+    const clamped = Math.max(-100, Math.min(100, cents));
+    this.voices.forEach((v) => { v.detune = clamped; });
+    const now = this.ctx ? this.ctx.currentTime : 0;
+    this.activeVoiceMap.forEach((voice) => {
+      voice.detune = clamped;
+      if (voice.osc) voice.osc.detune.setValueAtTime(clamped, now);
+    });
   }
 
   getPresets() {
