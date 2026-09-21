@@ -1,0 +1,32 @@
+{
+  "cwd": "/home/valiwo/_DEVE/SUBUNDERGRUND ELECTRONIC",
+  "type": [
+    "cordova"
+  ],
+  "name": "SUBUNDERGRUND ELECTRONIC",
+  "pkg": "org.cocftechno4.SUBUNDERGRUNDELECTRONIC",
+  "framework": "core",
+  "template": "audio-studio",
+  "bundler": "vite",
+  "cssPreProcessor": false,
+  "cordova": {
+    "folder": "cordova",
+    "platforms": [
+      "android",
+      "electron"
+    ],
+    "plugins": [
+      "cordova-plugin-statusbar",
+      "cordova-plugin-keyboard",
+      "cordova-plugin-splashscreen"
+    ]
+  },
+  "theming": {
+    "customColor": false,
+    "color": "#007aff",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false
+  },
+  "customBuild": false
+}

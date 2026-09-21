@@ -1,0 +1,426 @@
+<template>
+  <div class="page page-audio-workshop">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+        <div class="left">
+          <span class="badge color-green margin-right-half">
+            <i class="icon t4-icons" style="font-size: 14px; vertical-align: middle;">waveform_path</i>
+            DSP AUDIO
+          </span>
+        </div>
+        <div class="title">Audio Workshop</div>
+        <div class="right">
+          <button class="button button-small button-outline color-red" @click=${panicAllNotesOff}>
+            PANIC
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- 1. Real-Time Canvas Oscilloscope -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">waveform_path</i>
+        Real-Time DSP Oscilloscope
+      </div>
+      <div class="block block-strong inset no-margin-bottom">
+        <div class="oscilloscope-wrapper" style="position: relative; background: #080c14; border-radius: 10px; overflow: hidden; padding: 4px;">
+          <canvas id="audio-workshop-canvas" style="width: 100%; height: 160px; display: block;"></canvas>
+          <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px;">
+            <span class="badge color-blue">${waveform.toUpperCase()}</span>
+            <span class="badge ${activeVoiceCount > 0 ? 'color-green' : 'color-gray'}">Voices: ${activeVoiceCount}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Synthesizer Rotary Controls (Round Range Sliders) -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">knob</i>
+        Аналогові регулятори (Round Range Sliders)
+      </div>
+      <div class="block block-strong inset">
+        <div class="margin-bottom-half font-bold">Waveform:</div>
+        <div class="segmented segmented-raised margin-bottom">
+          <button class="button ${waveform === 'sawtooth' ? 'button-active' : ''}" @click=${() => setWaveform('sawtooth')}>SAW</button>
+          <button class="button ${waveform === 'square' ? 'button-active' : ''}" @click=${() => setWaveform('square')}>SQR</button>
+          <button class="button ${waveform === 'triangle' ? 'button-active' : ''}" @click=${() => setWaveform('triangle')}>TRI</button>
+          <button class="button ${waveform === 'sine' ? 'button-active' : ''}" @click=${() => setWaveform('sine')}>SIN</button>
+        </div>
+
+        <div class="display-flex justify-content-space-around align-items-center flex-wrap" style="background: rgba(0,0,0,0.06); border-radius: 12px; padding: 12px 6px;">
+          <div
+            class="round-range-slider round-range-slider-init"
+            id="ws-volume-knob"
+            data-mode="0+"
+            data-min="0"
+            data-max="100"
+            data-value="75"
+            data-default-value="75"
+            data-title="Volume"
+            data-unit="%"
+            data-size="80"
+          ></div>
+
+          <div
+            class="round-range-slider round-range-slider-init"
+            id="ws-detune-knob"
+            data-mode="-0+"
+            data-min="-50"
+            data-max="50"
+            data-value="0"
+            data-default-value="0"
+            data-snap="true"
+            data-snap-values="[0]"
+            data-title="Detune"
+            data-unit="c"
+            data-size="80"
+          ></div>
+
+          <div
+            class="round-range-slider round-range-slider-init"
+            id="ws-cutoff-knob"
+            data-mode="0+"
+            data-min="40"
+            data-max="12000"
+            data-value="2500"
+            data-default-value="2500"
+            data-title="Cutoff"
+            data-unit=" Hz"
+            data-size="80"
+          ></div>
+
+          <div
+            class="round-range-slider round-range-slider-init"
+            id="ws-res-knob"
+            data-mode="0+"
+            data-min="0.5"
+            data-max="20"
+            data-step="0.5"
+            data-value="4"
+            data-default-value="4"
+            data-title="Resonance"
+            data-unit=" Q"
+            data-size="80"
+          ></div>
+        </div>
+
+        <div class="grid grid-cols-2 grid-gap margin-top">
+          <button class="button button-fill button-raised" @click=${playDemoMelody}>
+            <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">${isDemoPlaying ? 'stop_fill' : 'play_fill'}</i>
+            ${isDemoPlaying ? 'Stop Melody' : 'Play Demo Scale'}
+          </button>
+          <button class="button button-outline" @click=${panicAllNotesOff}>
+            Panic All Notes Off
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Polyphonic Touch Piano Keyboard -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">tuningfork</i>
+        Polyphonic Touch Keyboard (C4 - C5)
+      </div>
+      <div class="block block-strong inset piano-block-container" style="padding: 12px 6px; overflow-x: auto;">
+        <div class="piano-keyboard-wrapper" style="position: relative; height: 140px; min-width: 320px; user-select: none; touch-action: none;">
+          <div class="piano-keyboard" style="display: flex; height: 100%; position: relative;">
+            <!-- White Keys -->
+            ${whiteKeys.map((k) => $h`
+              <div
+                class="piano-key white-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
+                style="flex: 1; border: 1px solid #cbd5e1; background: ${activeKeys[k.note] ? '#38bdf8' : '#fff'}; border-radius: 0 0 6px 6px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 8px; cursor: pointer;"
+                @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
+                @pointerup=${(e) => onKeyPointerUp(e, k.note)}
+                @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
+              >
+                <span style="font-size: 11px; font-weight: 700; color: #1e293b;">${k.note}</span>
+                <span style="font-size: 9px; color: #64748b;">[${k.keyChar}]</span>
+              </div>
+            `)}
+
+            <!-- Black Keys -->
+            ${blackKeys.map((k) => $h`
+              <div
+                class="piano-key black-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
+                style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: ${activeKeys[k.note] ? '#0284c7' : '#0f172a'}; border-radius: 0 0 4px 4px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer;"
+                @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
+                @pointerup=${(e) => onKeyPointerUp(e, k.note)}
+                @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
+              >
+                <span style="font-size: 10px; font-weight: 700; color: #f8fafc;">${k.note}</span>
+              </div>
+            `)}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default (props, { $, $on, $update }) => {
+  let audioCtx = null;
+  let masterGain = null;
+  let filterNode = null;
+  let analyser = null;
+  let waveform = 'sawtooth';
+  let volume = 75;
+  let detune = 0;
+  let cutoff = 2500;
+  let resonance = 4;
+  let activeVoiceCount = 0;
+  let animFrameId = null;
+  let isDemoPlaying = false;
+  let demoTimerId = null;
+
+  const activeVoices = new Map();
+  const activeKeys = {};
+
+  const whiteKeys = [
+    { note: 'C4', freq: 261.63, keyChar: 'A' },
+    { note: 'D4', freq: 293.66, keyChar: 'S' },
+    { note: 'E4', freq: 329.63, keyChar: 'D' },
+    { note: 'F4', freq: 349.23, keyChar: 'F' },
+    { note: 'G4', freq: 392.00, keyChar: 'G' },
+    { note: 'A4', freq: 440.00, keyChar: 'H' },
+    { note: 'B4', freq: 493.88, keyChar: 'J' },
+    { note: 'C5', freq: 523.25, keyChar: 'K' },
+  ];
+
+  const blackKeys = [
+    { note: 'C#4', freq: 277.18, offsetPct: 8 },
+    { note: 'D#4', freq: 311.13, offsetPct: 20.5 },
+    { note: 'F#4', freq: 369.99, offsetPct: 45.5 },
+    { note: 'G#4', freq: 415.30, offsetPct: 58 },
+    { note: 'A#4', freq: 466.16, offsetPct: 70.5 },
+  ];
+
+  function ensureAudioRunning() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(volume / 100, audioCtx.currentTime);
+
+      filterNode = audioCtx.createBiquadFilter();
+      filterNode.type = 'lowpass';
+      filterNode.frequency.setValueAtTime(cutoff, audioCtx.currentTime);
+      filterNode.Q.setValueAtTime(resonance, audioCtx.currentTime);
+
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+
+      masterGain.connect(filterNode);
+      filterNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      startOscilloscope();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function startOscilloscope() {
+    const canvas = document.getElementById('audio-workshop-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function draw() {
+      animFrameId = requestAnimationFrame(draw);
+      analyser.getByteTimeDomainData(dataArray);
+
+      ctx.fillStyle = '#080c14';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#00f0ff';
+      ctx.beginPath();
+
+      const sliceWidth = canvas.width / bufferLength;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i += 1) {
+        const v = dataArray[i] / 128.0;
+        const y = (v * canvas.height) / 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+    }
+    draw();
+  }
+
+  function playNote(note, freq) {
+    ensureAudioRunning();
+    stopNote(note);
+
+    const osc = audioCtx.createOscillator();
+    const voiceGain = audioCtx.createGain();
+
+    osc.type = waveform;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.detune.setValueAtTime(detune, audioCtx.currentTime);
+
+    const now = audioCtx.currentTime;
+    voiceGain.gain.setValueAtTime(0.001, now);
+    voiceGain.gain.exponentialRampToValueAtTime(0.6, now + 0.02);
+
+    osc.connect(voiceGain);
+    voiceGain.connect(masterGain);
+    osc.start();
+
+    activeVoices.set(note, { osc, gain: voiceGain });
+    activeKeys[note] = true;
+    activeVoiceCount = activeVoices.size;
+    $update();
+  }
+
+  function stopNote(note) {
+    if (!activeVoices.has(note)) return;
+    const voice = activeVoices.get(note);
+    activeVoices.delete(note);
+    delete activeKeys[note];
+    activeVoiceCount = activeVoices.size;
+
+    if (audioCtx && voice && voice.gain) {
+      const now = audioCtx.currentTime;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+      voice.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+      setTimeout(() => {
+        try {
+          voice.osc.stop();
+          voice.osc.disconnect();
+          voice.gain.disconnect();
+        } catch (e) {}
+      }, 90);
+    }
+    $update();
+  }
+
+  function panicAllNotesOff() {
+    if (demoTimerId) {
+      clearInterval(demoTimerId);
+      demoTimerId = null;
+      isDemoPlaying = false;
+    }
+    activeVoices.forEach((voice) => {
+      try {
+        voice.osc.stop();
+        voice.osc.disconnect();
+        voice.gain.disconnect();
+      } catch (e) {}
+    });
+    activeVoices.clear();
+    Object.keys(activeKeys).forEach((k) => delete activeKeys[k]);
+    activeVoiceCount = 0;
+    $update();
+  }
+
+  function onKeyPointerDown(e, note, freq) {
+    if (e) e.preventDefault();
+    playNote(note, freq);
+  }
+
+  function onKeyPointerUp(e, note) {
+    if (e) e.preventDefault();
+    stopNote(note);
+  }
+
+  function onKeyPointerLeave(e, note) {
+    stopNote(note);
+  }
+
+  function setWaveform(w) {
+    waveform = w;
+    activeVoices.forEach((v) => {
+      try { v.osc.type = w; } catch (e) {}
+    });
+    $update();
+  }
+
+  function playDemoMelody() {
+    if (isDemoPlaying) {
+      panicAllNotesOff();
+      return;
+    }
+    ensureAudioRunning();
+    isDemoPlaying = true;
+    const melody = [
+      { note: 'C4', freq: 261.63, dur: 220 },
+      { note: 'E4', freq: 329.63, dur: 220 },
+      { note: 'G4', freq: 392.00, dur: 220 },
+      { note: 'C5', freq: 523.25, dur: 380 },
+      { note: 'B4', freq: 493.88, dur: 220 },
+      { note: 'G4', freq: 392.00, dur: 220 },
+      { note: 'C4', freq: 261.63, dur: 450 },
+    ];
+    let step = 0;
+    demoTimerId = setInterval(() => {
+      if (!isDemoPlaying || step >= melody.length) {
+        panicAllNotesOff();
+        return;
+      }
+      playNote(melody[step].note, melody[step].freq);
+      setTimeout(() => stopNote(melody[step].note), melody[step].dur - 30);
+      step += 1;
+    }, 280);
+    $update();
+  }
+
+  $on('pageInit', () => {
+    // Bind Round Range Sliders
+    $('#ws-volume-knob').on('roundrange:change change', (e) => {
+      if (e.target.f7RoundRange) {
+        volume = e.target.f7RoundRange.value;
+        if (masterGain && audioCtx) {
+          masterGain.gain.setTargetAtTime(volume / 100, audioCtx.currentTime, 0.02);
+        }
+      }
+    });
+
+    $('#ws-detune-knob').on('roundrange:change change', (e) => {
+      if (e.target.f7RoundRange) {
+        detune = e.target.f7RoundRange.value;
+        activeVoices.forEach((v) => {
+          if (v.osc && audioCtx) v.osc.detune.setValueAtTime(detune, audioCtx.currentTime);
+        });
+      }
+    });
+
+    $('#ws-cutoff-knob').on('roundrange:change change', (e) => {
+      if (e.target.f7RoundRange) {
+        cutoff = e.target.f7RoundRange.value;
+        if (filterNode && audioCtx) {
+          filterNode.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.02);
+        }
+      }
+    });
+
+    $('#ws-res-knob').on('roundrange:change change', (e) => {
+      if (e.target.f7RoundRange) {
+        resonance = e.target.f7RoundRange.value;
+        if (filterNode && audioCtx) {
+          filterNode.Q.setTargetAtTime(resonance, audioCtx.currentTime, 0.02);
+        }
+      }
+    });
+  });
+
+  $on('pageBeforeRemove', () => {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    panicAllNotesOff();
+    if (audioCtx) {
+      audioCtx.close();
+      audioCtx = null;
+    }
+  });
+
+  return $render;
+};
+</script>

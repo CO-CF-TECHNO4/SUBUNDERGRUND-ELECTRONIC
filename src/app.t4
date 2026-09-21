@@ -1,0 +1,163 @@
+
+<template>
+  <div id="app">
+
+    <!-- Left panel with cover effect-->
+    <div class="panel panel-left panel-cover dark panel-init">
+      <div class="view">
+        <div class="page">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">Left Panel</div>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="block">Left panel content goes here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Right panel with reveal effect-->
+    <div class="panel panel-right panel-reveal dark">
+      <div class="view">
+        <div class="page">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">Right Panel</div>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="block">Right panel content goes here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Views/Tabs container -->
+    <div class="views tabs safe-areas">
+      <!-- Tabbar for switching views-tabs -->
+      <div class="toolbar toolbar-bottom tabbar-labels">
+        <div class="toolbar-inner">
+          <a href="#view-audio" class="tab-link tab-link-active">
+            <i class="icon t4-icons">waveform_path</i>
+            <span class="tabbar-label">Audio Workshop</span>
+          </a>
+          <a href="#view-hardware" class="tab-link">
+            <i class="icon t4-icons">cpu</i>
+            <span class="tabbar-label">MIDI &amp; Serial</span>
+          </a>
+          <a href="#view-threads" class="tab-link">
+            <i class="icon t4-icons">arrow_branch</i>
+            <span class="tabbar-label">Threads Studio</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Tab 1: Audio Workshop (Main View) -->
+      <div id="view-audio" class="view view-main view-init tab tab-active" data-name="audio" data-url="/">
+        <!-- Audio Workshop loaded dynamically from / route -->
+      </div>
+
+      <!-- Tab 2: MIDI & Serial Hardware View -->
+      <div id="view-hardware" class="view view-init tab" data-name="hardware" data-url="/hardware/">
+        <!-- Hardware loaded dynamically from /hardware/ route -->
+      </div>
+
+      <!-- Tab 3: Threads Studio View -->
+      <div id="view-threads" class="view view-init tab" data-name="threads" data-url="/threads/">
+        <!-- Threads Studio loaded dynamically from /threads/ route -->
+      </div>
+    </div>
+
+
+    <!-- Popup -->
+    <div class="popup" id="my-popup">
+      <div class="view">
+        <div class="page">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">Popup</div>
+              <div class="right">
+                <a href="#" class="link popup-close">Close</a>
+              </div>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="block">
+              <p>Popup content goes here.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="my-login-screen">
+      <div class="view">
+        <div class="page">
+          <div class="page-content login-screen-content">
+            <div class="login-screen-title">Login</div>
+            <div class="list">
+              <ul>
+                <li class="item-content item-input">
+                  <div class="item-inner">
+                    <div class="item-title item-label">Username</div>
+                    <div class="item-input-wrap">
+                      <input type="text" name="username" placeholder="Your username" value="${username}" @input="${updateUsername}"/>
+
+                    </div>
+                  </div>
+                </li>
+                <li class="item-content item-input">
+                  <div class="item-inner">
+                    <div class="item-title item-label">Password</div>
+                    <div class="item-input-wrap">
+                      <input type="password" name="password" placeholder="Your password" value="${password}" @input="${updatePassword}"/>
+
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="list">
+              <ul>
+                <li>
+                  <a href="#" class="item-link list-button login-button" @click="${alertLoginData}">Sign In</a>
+
+                </li>
+              </ul>
+              <div class="block-footer">Some text about login information.<br/>Click "Sign In" to close Login Screen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</template>
+<script>
+  export default (props, { $t4, $update }) => {
+    // Login screen demo data
+    let username = '';
+    let password = '';
+
+    const updateUsername = (e) => {
+      username = e.target.value;
+      $update();
+    }
+    const updatePassword = (e) => {
+      password = e.target.value;
+      $update();
+    }
+    const alertLoginData = () => {
+      $t4.dialog.alert('Username: ' + username + '<br/>Password: ' + password, () => {
+        $t4.loginScreen.close();
+      });
+    }
+
+    return $render;
+  }
+</script>

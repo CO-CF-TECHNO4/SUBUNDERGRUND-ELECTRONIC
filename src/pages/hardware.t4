@@ -1,0 +1,224 @@
+<template>
+  <div class="page page-hardware">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+        <div class="left">
+          <span class="badge color-blue margin-right-half">
+            <i class="icon t4-icons" style="font-size: 14px; vertical-align: middle;">cpu</i>
+            HARDWARE &amp; DSP
+          </span>
+        </div>
+        <div class="title">MIDI &amp; Serial Terminal</div>
+        <div class="right">
+          <button class="button button-small button-outline color-blue" @click=${refreshMidi}>
+            SCAN MIDI
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- 1. Web MIDI Hardware Bridge -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">tuningfork</i>
+        Web MIDI Hardware Controller Bridge
+      </div>
+      <div class="block block-strong inset">
+        <div class="margin-bottom-half font-bold">Підключені MIDI контролери:</div>
+        ${midiDevices.length === 0 ? $h`
+          <div class="block block-strong-inset text-color-gray" style="background: rgba(0,0,0,0.05); padding: 12px; border-radius: 8px;">
+            <i class="icon t4-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">info</i>
+            Зовнішніх MIDI-пристроїв не виявлено. Підключіть USB-MIDI клавіатуру або віртуальний MIDI порт.
+          </div>
+        ` : $h`
+          <div class="list simple-list">
+            <ul>
+              ${midiDevices.map((d) => $h`
+                <li style="display: flex; justify-content: space-between; align-items: center;">
+                  <span><b>${d.name}</b> (${d.manufacturer || 'Generic'})</span>
+                  <span class="badge color-green">ACTIVE</span>
+                </li>
+              `)}
+            </ul>
+          </div>
+        `}
+
+        <div class="display-flex justify-content-space-between align-items-center margin-top">
+          <span>Остання MIDI-подія:</span>
+          <b class="text-color-primary font-monospace">${lastMidiMsg}</b>
+        </div>
+      </div>
+
+      <!-- 2. Web Serial API Terminal -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">cpu</i>
+        Web Serial Hardware Terminal
+      </div>
+      <div class="block block-strong inset">
+        <div class="display-flex align-items-center gap-8 margin-bottom">
+          <button class="button button-fill color-blue" @click=${toggleSerialConnect}>
+            <i class="icon t4-icons margin-right-half" style="font-size: 16px; vertical-align: middle;">cpu</i>
+            ${serialConnected ? 'Відʼєднати COM-порт' : 'Підʼєднати COM-порт'}
+          </button>
+          <span class="badge ${serialConnected ? 'color-green' : 'color-gray'}">
+            ${serialConnected ? 'COM CONNECTED' : 'DISCONNECTED'}
+          </span>
+        </div>
+
+        <div style="background: #080c14; border-radius: 8px; padding: 10px 12px; min-height: 120px; max-height: 180px; overflow-y: auto; font-family: monospace; font-size: 12px; color: #38bdf8;">
+          ${serialLogs.length === 0 ? $h`
+            <div style="color: #64748b; font-style: italic;">Термінал готовий до передачі та прийому пакетів (115200 baud)...</div>
+          ` : $h`
+            ${serialLogs.map((log) => $h`
+              <div>[${log.time}] ${log.text}</div>
+            `)}
+          `}
+        </div>
+
+        <div class="display-flex gap-8 margin-top">
+          <input
+            type="text"
+            placeholder="Введіть команду або HEX-пакет (наприклад: *IDN? або 0xF0)..."
+            class="input-text"
+            style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;"
+            value=${inputCmd}
+            @input=${(e) => { inputCmd = e.target.value; }}
+            @keydown=${(e) => { if (e.key === 'Enter') sendSerialCmd(); }}
+          />
+          <button class="button button-fill" @click=${sendSerialCmd}>
+            Надіслати
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. 6-Channel Telemetry Monitor -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">speedometer</i>
+        6-Channel DSP Telemetry Monitor
+      </div>
+      <div class="block block-strong inset text-align-center">
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+          ${channels.map((ch, idx) => $h`
+            <div style="background: rgba(0,0,0,0.06); border-radius: 8px; padding: 8px 4px;">
+              <div style="font-size: 10px; font-weight: 700; color: #64748b;">CH ${idx + 1}</div>
+              <div style="height: 90px; width: 10px; background: #1e293b; border-radius: 3px; margin: 6px auto; position: relative; overflow: hidden; display: flex; align-items: flex-end;">
+                <div style="width: 100%; height: ${ch.level}%; background: linear-gradient(0deg, #10b981 0%, #00f0ff 60%, #f59e0b 85%, #ef4444 100%); transition: height 0.1s ease;"></div>
+              </div>
+              <div style="font-size: 9px; font-family: monospace; font-weight: 700; color: #0284c7;">${ch.peak} dB</div>
+            </div>
+          `)}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default (props, { $, $on, $update }) => {
+  let midiDevices = [];
+  let lastMidiMsg = 'Немає подій';
+  let serialConnected = false;
+  let serialPort = null;
+  let inputCmd = '';
+  let serialLogs = [];
+  let telemetryTimer = null;
+
+  let channels = [
+    { level: 45, peak: -12 },
+    { level: 30, peak: -18 },
+    { level: 65, peak: -6 },
+    { level: 50, peak: -10 },
+    { level: 20, peak: -24 },
+    { level: 35, peak: -15 },
+  ];
+
+  function refreshMidi() {
+    if (typeof navigator.requestMIDIAccess === 'function') {
+      navigator.requestMIDIAccess()
+        .then((access) => {
+          const list = [];
+          access.inputs.forEach((entry) => {
+            list.push({ name: entry.name, manufacturer: entry.manufacturer, id: entry.id });
+            entry.onmidimessage = (msg) => {
+              const [status, data1, data2] = msg.data;
+              lastMidiMsg = `0x${status.toString(16).toUpperCase()} ${data1} ${data2 || 0}`;
+              $update();
+            };
+          });
+          midiDevices = list;
+          $update();
+        })
+        .catch(() => {
+          midiDevices = [];
+          $update();
+        });
+    }
+  }
+
+  async function toggleSerialConnect() {
+    if (serialConnected) {
+      if (serialPort) {
+        try { await serialPort.close(); } catch (e) {}
+        serialPort = null;
+      }
+      serialConnected = false;
+      addSerialLog('Порт закрито.');
+      $update();
+      return;
+    }
+
+    if (navigator.serial) {
+      try {
+        serialPort = await navigator.serial.requestPort();
+        await serialPort.open({ baudRate: 115200 });
+        serialConnected = true;
+        addSerialLog('COM-порт успішно підʼєднано на швидкості 115200.');
+      } catch (err) {
+        addSerialLog(`Помилка Serial: ${err.message || err}`);
+      }
+      $update();
+    } else {
+      addSerialLog('Web Serial API не підтримується у цьому середовищі.');
+      $update();
+    }
+  }
+
+  function addSerialLog(text) {
+    const time = new Date().toLocaleTimeString();
+    serialLogs.push({ time, text });
+    if (serialLogs.length > 30) serialLogs.shift();
+  }
+
+  function sendSerialCmd() {
+    if (!inputCmd.trim()) return;
+    addSerialLog(`TX > ${inputCmd}`);
+    if (serialPort && serialPort.writable) {
+      const writer = serialPort.writable.getWriter();
+      const enc = new TextEncoder();
+      writer.write(enc.encode(inputCmd + '\n'));
+      writer.releaseLock();
+    }
+    inputCmd = '';
+    $update();
+  }
+
+  $on('pageInit', () => {
+    refreshMidi();
+    telemetryTimer = setInterval(() => {
+      channels = channels.map((ch) => {
+        const randDelta = (Math.random() - 0.5) * 15;
+        const newLvl = Math.max(5, Math.min(95, ch.level + randDelta));
+        const newPeak = Math.round((newLvl / 100) * 40 - 40);
+        return { level: Math.round(newLvl), peak: newPeak };
+      });
+      $update();
+    }, 200);
+  });
+
+  $on('pageBeforeRemove', () => {
+    if (telemetryTimer) clearInterval(telemetryTimer);
+  });
+
+  return $render;
+};
+</script>

@@ -1,0 +1,36 @@
+/* iOS Cordova Tweak */
+.device-cordova.device-ios {
+  height: 100vh;
+}
+
+/* Button and Row Grid Spacing */
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--t4-grid-gap, 16px);
+  margin-bottom: 16px;
+}
+p.row {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.row:last-child,
+p.row:last-child {
+  margin-bottom: 0;
+}
+.row > .col,
+.row > [class*="col-"] {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.grid {
+  margin-bottom: 16px;
+}
+.grid:last-child {
+  margin-bottom: 0;
+}
+
+/* Your app custom styles here */
