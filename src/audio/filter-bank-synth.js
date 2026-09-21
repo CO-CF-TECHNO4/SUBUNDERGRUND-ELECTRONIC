@@ -89,7 +89,8 @@ class SynthVoice {
     this.voiceGain.gain.setValueAtTime(0.0001, now);
     
     // Attack phase (linear ramp)
-    const attackEnd = now + Math.max(0.002, env.attack);
+    const attackDuration = Math.max(0.001, env.attack);
+    const attackEnd = now + attackDuration;
     this.voiceGain.gain.linearRampToValueAtTime(targetGain, attackEnd);
 
     // Decay to Sustain (asymptotic decay via setTargetAtTime)
@@ -108,14 +109,17 @@ class SynthVoice {
 
       if (!cfg || cfg.bypass) {
         // Transparent allpass when bypassed
-        node.type = 'allpass';
-        node.frequency.setTargetAtTime(20000, now, 0.01);
-        node.Q.setTargetAtTime(0.1, now, 0.01);
-        node.gain.setTargetAtTime(0, now, 0.01);
+        if (node.type !== 'allpass') node.type = 'allpass';
+        node.frequency.cancelScheduledValues(now);
+        node.frequency.setValueAtTime(20000, now);
+        node.Q.cancelScheduledValues(now);
+        node.Q.setValueAtTime(0.1, now);
+        node.gain.cancelScheduledValues(now);
+        node.gain.setValueAtTime(0, now);
         continue;
       }
 
-      node.type = cfg.type;
+      if (node.type !== cfg.type) node.type = cfg.type;
 
       // Tracking frequency vs Fixed frequency with Cutoff Bias multiplier
       let targetFreq = 1000;
@@ -127,9 +131,12 @@ class SynthVoice {
       }
       targetFreq = Math.max(20, Math.min(20000, targetFreq));
 
-      node.frequency.setTargetAtTime(targetFreq, now, 0.01);
-      node.Q.setTargetAtTime(Math.max(0.1, Math.min(30, (cfg.q ?? 1) * this.resonanceBias)), now, 0.01);
-      node.gain.setTargetAtTime(Math.max(-40, Math.min(24, cfg.gain ?? 0)), now, 0.01);
+      node.frequency.cancelScheduledValues(now);
+      node.frequency.setValueAtTime(targetFreq, now);
+      node.Q.cancelScheduledValues(now);
+      node.Q.setValueAtTime(Math.max(0.1, Math.min(30, (cfg.q ?? 1) * this.resonanceBias)), now);
+      node.gain.cancelScheduledValues(now);
+      node.gain.setValueAtTime(Math.max(-40, Math.min(24, cfg.gain ?? 0)), now);
     }
   }
 
@@ -175,6 +182,10 @@ class SynthVoice {
   }
 
   cleanup() {
+    if (this.releaseTimer) {
+      clearTimeout(this.releaseTimer);
+      this.releaseTimer = null;
+    }
     if (this.osc) {
       try {
         this.osc.stop();
@@ -182,10 +193,13 @@ class SynthVoice {
       } catch (e) {}
       this.osc = null;
     }
+    if (this.ctx && this.voiceGain) {
+      this.voiceGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.voiceGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+    }
     this.note = null;
     this.freq = 0;
     this.isReleasing = false;
-    this.releaseTimer = null;
   }
 }
 
@@ -279,11 +293,20 @@ export class FilterBankSynth {
       this.triggerRelease(note);
     }
 
-    // Find available free voice or steal least recently used (LRU)
-    let voice = this.voices.find((v) => !v.note);
+    // Smart 3-tier Voice Allocation:
+    // 1. First priority: completely free/idle voice
+    let voice = this.voices.find((v) => !v.note && !v.isReleasing);
 
+    // 2. Second priority: voice currently in release phase
     if (!voice) {
-      // Voice stealing: find oldest active voice
+      voice = this.voices.find((v) => v.isReleasing);
+      if (voice && voice.note) {
+        this.activeVoiceMap.delete(voice.note);
+      }
+    }
+
+    // 3. Third priority: LRU voice stealing (oldest active voice)
+    if (!voice) {
       let oldestTime = Infinity;
       this.voices.forEach((v) => {
         if (v.startTime < oldestTime) {

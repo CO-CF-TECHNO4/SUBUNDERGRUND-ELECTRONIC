@@ -57,7 +57,8 @@ export class PerformanceMonitor {
         const sum = this.history.reduce((a, b) => a + b, 0);
         this.fps = Math.round((sum / this.history.length) * 10) / 10;
 
-        if (this.onTick && this.totalFrames % 4 === 0) {
+        // Throttle HUD DOM updates to ~2.5 times per second (every 24 frames) to prevent continuous style recalcs
+        if (this.onTick && this.totalFrames % 24 === 0) {
           this.onTick({
             fps: this.fps,
             frameTime: Math.round(this.frameTime * 10) / 10,

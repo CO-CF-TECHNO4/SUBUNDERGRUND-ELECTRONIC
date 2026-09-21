@@ -32,11 +32,12 @@
         ${presets.map((p) => $h`
           <button
             class="button button-small preset-btn ${p.id === activePreset.id ? 'preset-active' : ''}"
+            data-id=${p.id}
             style="flex: 1; min-width: 100px; height: 26px; line-height: 24px; padding: 0 6px; font-size: 10px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 5px;"
             @click=${() => selectInstrument(p.id)}
           >
-            <i class="icon t4-icons" style="font-size: 12px;">${p.icon || 'waveform_path'}</i>
-            <span>${p.name}</span>
+            <i class="icon t4-icons" style="font-size: 12px; pointer-events: none;">${p.icon || 'waveform_path'}</i>
+            <span style="pointer-events: none;">${p.name}</span>
           </button>
         `)}
       </div>
@@ -70,8 +71,8 @@
 
           <!-- Top HUD Overlay Badges -->
           <div style="position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; pointer-events: none;">
-            <span class="badge color-blue" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.name}</span>
-            <span class="badge color-purple" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.waveform.toUpperCase()}</span>
+            <span id="ws-badge-preset" class="badge color-blue" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.name}</span>
+            <span id="ws-badge-wave" class="badge color-purple" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.waveform.toUpperCase()}</span>
             <span id="ws-voice-count-badge" class="badge color-gray" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">VOICES: 0</span>
           </div>
 
@@ -160,12 +161,12 @@
           <!-- Quick Waveform & Demo strip -->
           <div style="display: flex; flex-direction: column; justify-content: space-between; height: 86px; width: 62px; flex-shrink: 0; padding-left: 1px;">
             <div class="segmented segmented-raised" style="height: 19px;">
-              <button class="button ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
-              <button class="button ${activePreset.waveform === 'square' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
+              <button class="button waveform-btn ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" data-waveform="sawtooth" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
+              <button class="button waveform-btn ${activePreset.waveform === 'square' ? 'button-active' : ''}" data-waveform="square" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
             </div>
             <div class="segmented segmented-raised" style="height: 19px;">
-              <button class="button ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
-              <button class="button ${activePreset.waveform === 'sine' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
+              <button class="button waveform-btn ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" data-waveform="triangle" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
+              <button class="button waveform-btn ${activePreset.waveform === 'sine' ? 'button-active' : ''}" data-waveform="sine" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
             </div>
             <button
               id="ws-demo-btn"
@@ -190,12 +191,12 @@
             <i class="icon t4-icons" style="font-size: 11px; color: #00f0ff;">cpu</i>
             8-FILTER MODULAR RACK
           </span>
-          <span style="color: #64748b; font-size: 8.5px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;">
+          <span id="ws-rack-desc" style="color: #64748b; font-size: 8.5px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;">
             ${activePreset.description}
           </span>
         </div>
 
-        <!-- 8 Filter Channel Strips Grid -->
+        <!-- 8 Filter Channel Strips Grid (Static IDs for Zero VDOM Churn) -->
         <div
           class="filter-strips-grid"
           style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 2px; flex: 1; height: 100%; min-height: 0;"
@@ -203,13 +204,15 @@
           ${activePreset.filters.map((f, idx) => $h`
             <div
               class="filter-channel-strip ${f.bypass ? 'is-bypassed' : ''}"
-              key=${`filter-strip-${activePreset.id}-${idx}`}
+              key=${`strip-${idx}`}
+              id=${`filter-strip-${idx}`}
               style="background: ${f.bypass ? '#060a14' : '#0c1424'}; border: 1px solid ${f.bypass ? '#1a2234' : 'rgba(0, 240, 255, 0.25)'}; border-radius: 5px; padding: 2px 1px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; box-sizing: border-box; opacity: ${f.bypass ? 0.35 : 1.0}; transition: all 0.12s ease; overflow: hidden; min-width: 0;"
             >
               <!-- Strip Top: # and Bypass button -->
               <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; padding: 0 1px;">
                 <span style="font-size: 8px; font-weight: 800; color: #94a3b8; font-family: monospace;">#${f.id}</span>
                 <button
+                  id=${`ws-filter-bypass-btn-${idx}`}
                   class="button button-small ${f.bypass ? 'color-gray' : 'button-fill color-green'}"
                   style="height: 12px; line-height: 12px; font-size: 7px; padding: 0 3px; border-radius: 2px; min-width: 18px;"
                   @click=${() => toggleFilterBypass(idx)}
@@ -220,14 +223,15 @@
 
               <!-- Strip Filter Type Badge -->
               <div style="text-align: center; margin: 0; flex-shrink: 0;">
-                <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 7px; padding: 0 2px; height: 11px; line-height: 11px; font-weight: 800; border-radius: 2px;">
+                <span id=${`ws-filter-type-badge-${idx}`} class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 7px; padding: 0 2px; height: 11px; line-height: 11px; font-weight: 800; border-radius: 2px;">
                   ${filterTypeLabels[f.type] || f.type.toUpperCase()}
                 </span>
               </div>
 
               <!-- Circular Slider 1: Frequency / Multiplier -->
               <div
-                key=${`f-freq-${activePreset.id}-${idx}`}
+                key=${`f-freq-${idx}`}
+                id=${`ws-filter-freq-${idx}`}
                 class="round-range-slider round-range-slider-init filter-freq-knob ${f.tracking ? 'freq-tracking' : 'freq-fixed'}"
                 data-index=${idx}
                 data-mode="0+"
@@ -248,7 +252,8 @@
 
               <!-- Circular Slider 2: Resonance Q -->
               <div
-                key=${`f-q-${activePreset.id}-${idx}`}
+                key=${`f-q-${idx}`}
+                id=${`ws-filter-q-${idx}`}
                 class="round-range-slider round-range-slider-init filter-q-knob"
                 data-index=${idx}
                 data-mode="0+"
@@ -271,24 +276,22 @@
         </div>
       </div>
 
-      <!-- Row 4: Polyphonic Touch Piano Keyboard (Bottom Docked) -->
+      <!-- Row 4: Polyphonic Touch Piano Keyboard (Zero-Lag Pointer & Touch Handling) -->
       <div
         class="piano-dock"
         style="height: 95px; flex-shrink: 0; position: relative; border-radius: 7px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.5); user-select: none; touch-action: none;"
       >
-        <div class="piano-keyboard" style="display: flex; height: 100%; position: relative;">
+        <div class="piano-keyboard" style="display: flex; height: 100%; position: relative; touch-action: none;">
           <!-- White Keys -->
           ${whiteKeys.map((k) => $h`
             <div
               class="piano-key white-key"
               data-note=${k.note}
+              data-freq=${k.freq}
               style="flex: 1; border: 1px solid #1a253a; background: #0d1526; border-radius: 0 0 4px 4px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.04s ease;"
-              @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
-              @pointerup=${(e) => onKeyPointerUp(e, k.note)}
-              @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
             >
-              <span style="font-size: 10px; font-weight: 800; color: #f8fafc;">${k.note}</span>
-              <span style="font-size: 7.5px; color: #64748b;">[${k.keyChar}]</span>
+              <span style="font-size: 10px; font-weight: 800; color: #f8fafc; pointer-events: none;">${k.note}</span>
+              <span style="font-size: 7.5px; color: #64748b; pointer-events: none;">[${k.keyChar}]</span>
             </div>
           `)}
 
@@ -297,12 +300,10 @@
             <div
               class="piano-key black-key"
               data-note=${k.note}
+              data-freq=${k.freq}
               style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: #040710; border: 1px solid #1a253a; border-radius: 0 0 3px 3px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 3px; cursor: pointer; transition: background 0.04s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.8);"
-              @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
-              @pointerup=${(e) => onKeyPointerUp(e, k.note)}
-              @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
             >
-              <span style="font-size: 8.5px; font-weight: 700; color: #94a3b8;">${k.note}</span>
+              <span style="font-size: 8.5px; font-weight: 700; color: #94a3b8; pointer-events: none;">${k.note}</span>
             </div>
           `)}
         </div>
@@ -676,7 +677,95 @@ export default (props, { $, $on, $update }) => {
   function selectInstrument(presetId) {
     ensureAudio();
     activePreset = synthEngine.loadPreset(presetId);
-    $update();
+    if (!activePreset) return;
+
+    // 1. Update preset buttons in bar
+    document.querySelectorAll('.preset-btn').forEach((btn) => {
+      if (btn.getAttribute('data-id') === presetId) {
+        btn.classList.add('preset-active');
+      } else {
+        btn.classList.remove('preset-active');
+      }
+    });
+
+    // 2. Update rack description text
+    const descEl = document.getElementById('ws-rack-desc');
+    if (descEl) descEl.textContent = activePreset.description;
+
+    // 3. Update oscilloscope badges
+    const pBadge = document.getElementById('ws-badge-preset');
+    if (pBadge) pBadge.textContent = activePreset.name;
+    const wBadge = document.getElementById('ws-badge-wave');
+    if (wBadge) wBadge.textContent = activePreset.waveform.toUpperCase();
+
+    // 4. Update waveform buttons
+    document.querySelectorAll('.waveform-btn').forEach((btn) => {
+      if (btn.getAttribute('data-waveform') === activePreset.waveform) {
+        btn.classList.add('button-active');
+      } else {
+        btn.classList.remove('button-active');
+      }
+    });
+
+    // 5. Update 8-filter modular rack strips & knobs IN PLACE (0 DOM destruction)
+    activePreset.filters.forEach((f, idx) => {
+      const stripEl = document.getElementById(`filter-strip-${idx}`);
+      if (stripEl) {
+        if (f.bypass) {
+          stripEl.classList.add('is-bypassed');
+          stripEl.style.opacity = '0.35';
+          stripEl.style.background = '#060a14';
+        } else {
+          stripEl.classList.remove('is-bypassed');
+          stripEl.style.opacity = '1.0';
+          stripEl.style.background = '#0c1424';
+        }
+      }
+
+      // Bypass button
+      const bypassBtn = document.getElementById(`ws-filter-bypass-btn-${idx}`);
+      if (bypassBtn) {
+        bypassBtn.textContent = f.bypass ? 'OFF' : 'ON';
+        bypassBtn.className = f.bypass
+          ? 'button button-small color-gray'
+          : 'button button-small button-fill color-green';
+      }
+
+      // Filter type badge
+      const typeBadge = document.getElementById(`ws-filter-type-badge-${idx}`);
+      if (typeBadge) {
+        typeBadge.textContent = filterTypeLabels[f.type] || f.type.toUpperCase();
+        typeBadge.className = f.bypass ? 'badge color-gray' : 'badge color-blue';
+      }
+
+      // Frequency knob RoundRange update
+      const freqKnobEl = document.getElementById(`ws-filter-freq-${idx}`);
+      if (freqKnobEl && freqKnobEl.f7RoundRange) {
+        const rr = freqKnobEl.f7RoundRange;
+        rr.params.unit = f.tracking ? '×' : 'Hz';
+        rr.params.min = f.tracking ? 0.25 : 30;
+        rr.params.max = f.tracking ? 16.0 : 14000;
+        rr.params.step = f.tracking ? 0.05 : 10;
+        rr.min = rr.params.min;
+        rr.max = rr.params.max;
+        rr.step = rr.params.step;
+        rr.setValue(f.tracking ? f.freqMult : f.freqHz, false);
+
+        if (f.tracking) {
+          freqKnobEl.classList.add('freq-tracking');
+          freqKnobEl.classList.remove('freq-fixed');
+        } else {
+          freqKnobEl.classList.add('freq-fixed');
+          freqKnobEl.classList.remove('freq-tracking');
+        }
+      }
+
+      // Q knob RoundRange update
+      const qKnobEl = document.getElementById(`ws-filter-q-${idx}`);
+      if (qKnobEl && qKnobEl.f7RoundRange) {
+        qKnobEl.f7RoundRange.setValue(f.q, false);
+      }
+    });
   }
 
   function toggleFilterBypass(idx) {
@@ -684,7 +773,32 @@ export default (props, { $, $on, $update }) => {
     if (!f) return;
     f.bypass = !f.bypass;
     synthEngine.updateFilter(idx, { bypass: f.bypass });
-    $update();
+
+    const stripEl = document.getElementById(`filter-strip-${idx}`);
+    if (stripEl) {
+      if (f.bypass) {
+        stripEl.classList.add('is-bypassed');
+        stripEl.style.opacity = '0.35';
+        stripEl.style.background = '#060a14';
+      } else {
+        stripEl.classList.remove('is-bypassed');
+        stripEl.style.opacity = '1.0';
+        stripEl.style.background = '#0c1424';
+      }
+    }
+
+    const bypassBtn = document.getElementById(`ws-filter-bypass-btn-${idx}`);
+    if (bypassBtn) {
+      bypassBtn.textContent = f.bypass ? 'OFF' : 'ON';
+      bypassBtn.className = f.bypass
+        ? 'button button-small color-gray'
+        : 'button button-small button-fill color-green';
+    }
+
+    const typeBadge = document.getElementById(`ws-filter-type-badge-${idx}`);
+    if (typeBadge) {
+      typeBadge.className = f.bypass ? 'badge color-gray' : 'badge color-blue';
+    }
   }
 
   function onFilterFreqChange(idx, val) {
@@ -710,7 +824,17 @@ export default (props, { $, $on, $update }) => {
     ensureAudio();
     activePreset.waveform = w;
     synthEngine.setWaveform(w);
-    $update();
+
+    document.querySelectorAll('.waveform-btn').forEach((btn) => {
+      if (btn.getAttribute('data-waveform') === w) {
+        btn.classList.add('button-active');
+      } else {
+        btn.classList.remove('button-active');
+      }
+    });
+
+    const wBadge = document.getElementById('ws-badge-wave');
+    if (wBadge) wBadge.textContent = w.toUpperCase();
   }
 
   function playNote(note, freq) {
@@ -747,20 +871,6 @@ export default (props, { $, $on, $update }) => {
     updateVoiceCountBadge(0);
   }
 
-  function onKeyPointerDown(e, note, freq) {
-    if (e) e.preventDefault();
-    playNote(note, freq);
-  }
-
-  function onKeyPointerUp(e, note) {
-    if (e) e.preventDefault();
-    stopNote(note);
-  }
-
-  function onKeyPointerLeave(e, note) {
-    stopNote(note);
-  }
-
   function playDemoMelody() {
     if (isDemoPlaying) {
       panicAllNotesOff();
@@ -794,6 +904,96 @@ export default (props, { $, $on, $update }) => {
     }, 280);
   }
 
+  // Piano Pointer and Keyboard Bindings
+  const KEY_NOTE_MAP = {
+    'a': { note: 'C4', freq: 261.63 },
+    'w': { note: 'C#4', freq: 277.18 },
+    's': { note: 'D4', freq: 293.66 },
+    'e': { note: 'D#4', freq: 311.13 },
+    'd': { note: 'E4', freq: 329.63 },
+    'f': { note: 'F4', freq: 349.23 },
+    't': { note: 'F#4', freq: 369.99 },
+    'g': { note: 'G4', freq: 392.00 },
+    'y': { note: 'G#4', freq: 415.30 },
+    'z': { note: 'G#4', freq: 415.30 },
+    'h': { note: 'A4', freq: 440.00 },
+    'u': { note: 'A#4', freq: 466.16 },
+    'j': { note: 'B4', freq: 493.88 },
+    'k': { note: 'C5', freq: 523.25 },
+  };
+
+  let activePointerNote = null;
+  let isPointerActive = false;
+
+  function getKeyAtPoint(clientX, clientY) {
+    const el = document.elementFromPoint(clientX, clientY);
+    if (!el) return null;
+    return el.closest('.piano-key');
+  }
+
+  function onKeyboardPointerDown(e) {
+    e.preventDefault();
+    isPointerActive = true;
+    const keyEl = getKeyAtPoint(e.clientX, e.clientY);
+    if (!keyEl) return;
+    const note = keyEl.getAttribute('data-note');
+    const freq = parseFloat(keyEl.getAttribute('data-freq'));
+    if (!note || isNaN(freq)) return;
+    activePointerNote = note;
+    playNote(note, freq);
+  }
+
+  function onKeyboardPointerMove(e) {
+    if (!isPointerActive) return;
+    if (e.pointerType === 'mouse' && e.buttons !== 1) {
+      onKeyboardPointerUp();
+      return;
+    }
+    const keyEl = getKeyAtPoint(e.clientX, e.clientY);
+    if (!keyEl) {
+      if (activePointerNote) {
+        stopNote(activePointerNote);
+        activePointerNote = null;
+      }
+      return;
+    }
+    const note = keyEl.getAttribute('data-note');
+    const freq = parseFloat(keyEl.getAttribute('data-freq'));
+    if (note && note !== activePointerNote) {
+      if (activePointerNote) stopNote(activePointerNote);
+      activePointerNote = note;
+      if (!isNaN(freq)) playNote(note, freq);
+    }
+  }
+
+  function onKeyboardPointerUp() {
+    isPointerActive = false;
+    if (activePointerNote) {
+      stopNote(activePointerNote);
+      activePointerNote = null;
+    }
+  }
+
+  function onWindowKeyDown(e) {
+    if (e.repeat) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    const key = e.key.toLowerCase();
+    const mapping = KEY_NOTE_MAP[key];
+    if (mapping) {
+      e.preventDefault();
+      playNote(mapping.note, mapping.freq);
+    }
+  }
+
+  function onWindowKeyUp(e) {
+    const key = e.key.toLowerCase();
+    const mapping = KEY_NOTE_MAP[key];
+    if (mapping) {
+      e.preventDefault();
+      stopNote(mapping.note);
+    }
+  }
+
   $on('pageInit', () => {
     ensureAudio();
 
@@ -811,6 +1011,19 @@ export default (props, { $, $on, $update }) => {
         ftEl.textContent = `${frameTime.toFixed(1)}ms`;
       }
     });
+
+    // Attach Zero-Lag Touch & Pointer Piano Keyboard Listeners
+    const keyboardEl = document.querySelector('.piano-keyboard');
+    if (keyboardEl) {
+      keyboardEl.addEventListener('pointerdown', onKeyboardPointerDown);
+    }
+    window.addEventListener('pointermove', onKeyboardPointerMove);
+    window.addEventListener('pointerup', onKeyboardPointerUp);
+    window.addEventListener('pointercancel', onKeyboardPointerUp);
+
+    // Attach Physical Computer Keyboard Listeners
+    window.addEventListener('keydown', onWindowKeyDown);
+    window.addEventListener('keyup', onWindowKeyUp);
 
     // Bind Native Techno4 Round Range Sliders (single roundrange:change event)
     $('#ws-volume-knob').on('roundrange:change', (e) => {
@@ -865,6 +1078,17 @@ export default (props, { $, $on, $update }) => {
       resizeObs = null;
     }
     perfMonitor.stop();
+
+    const keyboardEl = document.querySelector('.piano-keyboard');
+    if (keyboardEl) {
+      keyboardEl.removeEventListener('pointerdown', onKeyboardPointerDown);
+    }
+    window.removeEventListener('pointermove', onKeyboardPointerMove);
+    window.removeEventListener('pointerup', onKeyboardPointerUp);
+    window.removeEventListener('pointercancel', onKeyboardPointerUp);
+    window.removeEventListener('keydown', onWindowKeyDown);
+    window.removeEventListener('keyup', onWindowKeyUp);
+
     panicAllNotesOff();
   });
 
