@@ -159,7 +159,7 @@ async function main() {
 
   const child = spawn('openclaw', cliArgs, {
     stdio: ['inherit', 'pipe', 'pipe'],
-    shell: true,
+    shell: false,
   });
 
   let stdoutBuffer = '';

@@ -114,6 +114,8 @@
   </div>
 </template>
 <script>
+import { synthEngine } from '../audio/filter-bank-synth.js';
+
 export default (props, { $, $on, $update }) => {
   let midiDevices = [];
   let lastMidiMsg = 'Немає подій';
@@ -142,6 +144,18 @@ export default (props, { $, $on, $update }) => {
             entry.onmidimessage = (msg) => {
               const [status, data1, data2] = msg.data;
               lastMidiMsg = `0x${status.toString(16).toUpperCase()} ${data1} ${data2 || 0}`;
+              
+              // Handle MIDI Note On and Note Off
+              const cmd = status & 0xf0;
+              const note = data1;
+              const velocity = data2 || 0;
+              if (cmd === 0x90 && velocity > 0) {
+                const freq = 440 * Math.pow(2, (note - 69) / 12);
+                synthEngine.init();
+                synthEngine.triggerAttack(`midi_${note}`, freq, velocity / 127);
+              } else if (cmd === 0x80 || (cmd === 0x90 && velocity === 0)) {
+                synthEngine.triggerRelease(`midi_${note}`);
+              }
               $update();
             };
           });

@@ -44,6 +44,9 @@ cordova/www/
 # Production build
 www/
 
+# Temporary files
+*.tmp
+
 # Automations (shared across developers)
 !automations/
 !automations/**

@@ -1,35 +1,56 @@
-
 import { createStore } from 'techno4';
+import { INSTRUMENT_PRESETS } from '../audio/presets.js';
+import synthEngine from '../audio/filter-bank-synth.js';
 
 const store = createStore({
   state: {
-    products: [
-      {
-        id: '1',
-        title: 'Apple iPhone 8',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi tempora similique reiciendis, error nesciunt vero, blanditiis pariatur dolor, minima sed sapiente rerum, dolorem corrupti hic modi praesentium unde saepe perspiciatis.'
-      },
-      {
-        id: '2',
-        title: 'Apple iPhone 8 Plus',
-        description: 'Velit odit autem modi saepe ratione totam minus, aperiam, labore quia provident temporibus quasi est ut aliquid blanditiis beatae suscipit odio vel! Nostrum porro sunt sint eveniet maiores, dolorem itaque!'
-      },
-      {
-        id: '3',
-        title: 'Apple iPhone X',
-        description: 'Expedita sequi perferendis quod illum pariatur aliquam, alias laboriosam! Vero blanditiis placeat, mollitia necessitatibus reprehenderit. Labore dolores amet quos, accusamus earum asperiores officiis assumenda optio architecto quia neque, quae eum.'
-      },
-    ]
+    presets: INSTRUMENT_PRESETS,
+    activePresetId: INSTRUMENT_PRESETS[0].id,
+    activePreset: JSON.parse(JSON.stringify(INSTRUMENT_PRESETS[0])),
+    masterVolume: 75,
+    activeVoiceCount: 0,
   },
   getters: {
-    products({ state }) {
-      return state.products;
-    }
-  },
-  actions: {
-    addProduct({ state }, product) {
-      state.products = [...state.products, product];
+    presets({ state }) {
+      return state.presets;
+    },
+    activePreset({ state }) {
+      return state.activePreset;
+    },
+    activePresetId({ state }) {
+      return state.activePresetId;
+    },
+    masterVolume({ state }) {
+      return state.masterVolume;
+    },
+    activeVoiceCount({ state }) {
+      return state.activeVoiceCount;
     },
   },
-})
+  actions: {
+    selectPreset({ state }, presetId) {
+      const found = state.presets.find((p) => p.id === presetId);
+      if (found) {
+        state.activePresetId = presetId;
+        state.activePreset = JSON.parse(JSON.stringify(found));
+        synthEngine.loadPreset(state.activePreset);
+      }
+    },
+    updateFilter({ state }, { index, changes }) {
+      if (state.activePreset.filters[index]) {
+        Object.assign(state.activePreset.filters[index], changes);
+        synthEngine.updateFilter(index, changes);
+      }
+    },
+    setMasterVolume({ state }, volume) {
+      state.masterVolume = volume;
+      synthEngine.setVolume(volume);
+    },
+    setWaveform({ state }, waveform) {
+      state.activePreset.waveform = waveform;
+      synthEngine.setWaveform(waveform);
+    },
+  },
+});
+
 export default store;

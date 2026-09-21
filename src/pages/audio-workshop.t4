@@ -6,7 +6,7 @@
         <div class="left">
           <span class="badge color-green margin-right-half">
             <i class="icon t4-icons" style="font-size: 14px; vertical-align: middle;">waveform_path</i>
-            DSP AUDIO
+            8-FILTER SYNTH
           </span>
         </div>
         <div class="title">Audio Workshop</div>
@@ -26,83 +26,129 @@
       </div>
       <div class="block block-strong inset no-margin-bottom">
         <div class="oscilloscope-wrapper" style="position: relative; background: #080c14; border-radius: 10px; overflow: hidden; padding: 4px;">
-          <canvas id="audio-workshop-canvas" style="width: 100%; height: 160px; display: block;"></canvas>
-          <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px;">
-            <span class="badge color-blue">${waveform.toUpperCase()}</span>
+          <canvas id="audio-workshop-canvas" style="width: 100%; height: 140px; display: block;"></canvas>
+          <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="badge color-blue">${activePreset.name}</span>
+            <span class="badge color-purple">${activePreset.waveform.toUpperCase()}</span>
             <span class="badge ${activeVoiceCount > 0 ? 'color-green' : 'color-gray'}">Voices: ${activeVoiceCount}</span>
           </div>
         </div>
       </div>
 
-      <!-- 2. Synthesizer Rotary Controls (Round Range Sliders) -->
-      <div class="block-title block-title-medium">
-        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">knob</i>
-        Аналогові регулятори (Round Range Sliders)
+      <!-- 2. Eight Factory Instrument Presets Grid -->
+      <div class="block-title block-title-medium display-flex justify-content-space-between align-items-center">
+        <span>
+          <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">tuningfork</i>
+          8 Базових Інструментів (Presets)
+        </span>
+        <span class="badge color-teal">${activePreset.category}</span>
       </div>
       <div class="block block-strong inset">
-        <div class="margin-bottom-half font-bold">Waveform:</div>
-        <div class="segmented segmented-raised margin-bottom">
-          <button class="button ${waveform === 'sawtooth' ? 'button-active' : ''}" @click=${() => setWaveform('sawtooth')}>SAW</button>
-          <button class="button ${waveform === 'square' ? 'button-active' : ''}" @click=${() => setWaveform('square')}>SQR</button>
-          <button class="button ${waveform === 'triangle' ? 'button-active' : ''}" @click=${() => setWaveform('triangle')}>TRI</button>
-          <button class="button ${waveform === 'sine' ? 'button-active' : ''}" @click=${() => setWaveform('sine')}>SIN</button>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 8px;">
+          ${presets.map((p) => $h`
+            <div
+              class="card no-margin ${p.id === activePreset.id ? 'card-outline' : ''}"
+              style="cursor: pointer; border-radius: 10px; background: ${p.id === activePreset.id ? 'rgba(0, 122, 255, 0.15)' : 'rgba(0,0,0,0.03)'}; border: ${p.id === activePreset.id ? '2px solid #007aff' : '1px solid rgba(0,0,0,0.08)'}; transition: all 0.15s ease;"
+              @click=${() => selectInstrument(p.id)}
+            >
+              <div class="card-content card-content-padding" style="padding: 10px 8px; text-align: center;">
+                <i class="icon t4-icons text-color-${p.color || 'blue'}" style="font-size: 24px;">${p.icon || 'waveform_path'}</i>
+                <div style="font-weight: 700; font-size: 12px; margin-top: 4px; line-height: 1.2;">${p.name}</div>
+                <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${p.category}</div>
+              </div>
+            </div>
+          `)}
         </div>
+        <div class="margin-top-half" style="font-size: 12px; color: #475569; font-style: italic;">
+          ${activePreset.description}
+        </div>
+      </div>
 
-        <div class="display-flex justify-content-space-around align-items-center flex-wrap" style="background: rgba(0,0,0,0.06); border-radius: 12px; padding: 12px 6px;">
-          <div
-            class="round-range-slider round-range-slider-init"
-            id="ws-volume-knob"
-            data-mode="0+"
-            data-min="0"
-            data-max="100"
-            data-value="75"
-            data-default-value="75"
-            data-title="Volume"
-            data-unit="%"
-            data-size="80"
-          ></div>
+      <!-- 3. Modular 8-Filter Bank Rack -->
+      <div class="block-title block-title-medium display-flex justify-content-space-between align-items-center">
+        <span>
+          <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">cpu</i>
+          Банк з 8 Фільтрів (8-Filter Bank Rack)
+        </span>
+        <button class="button button-small button-outline color-blue" @click=${() => { showFilterRack = !showFilterRack; $update(); }}>
+          ${showFilterRack ? 'Згорнути' : 'Розгорнути'}
+        </button>
+      </div>
 
-          <div
-            class="round-range-slider round-range-slider-init"
-            id="ws-detune-knob"
-            data-mode="-0+"
-            data-min="-50"
-            data-max="50"
-            data-value="0"
-            data-default-value="0"
-            data-snap="true"
-            data-snap-values="[0]"
-            data-title="Detune"
-            data-unit="c"
-            data-size="80"
-          ></div>
+      ${showFilterRack ? $h`
+        <div class="block block-strong inset filter-rack-container" style="padding: 10px 8px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+            ${activePreset.filters.map((f, idx) => $h`
+              <div
+                class="filter-slot-card"
+                style="background: ${f.bypass ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.05)'}; border: 1px solid ${f.bypass ? '#cbd5e1' : '#38bdf8'}; border-radius: 8px; padding: 8px 10px; opacity: ${f.bypass ? 0.6 : 1.0}; position: relative;"
+              >
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-weight: 700; font-size: 12px;">#${f.id} ${f.name}</span>
+                  <div style="display: flex; gap: 4px; align-items: center;">
+                    <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 10px;">
+                      ${f.type.toUpperCase()}
+                    </span>
+                    <button
+                      class="button button-small ${f.bypass ? 'button-outline color-gray' : 'button-fill color-green'}"
+                      style="font-size: 10px; height: 20px; line-height: 20px; padding: 0 6px;"
+                      @click=${() => toggleFilterBypass(idx)}
+                    >
+                      ${f.bypass ? 'BYPASS' : 'ON'}
+                    </button>
+                  </div>
+                </div>
 
-          <div
-            class="round-range-slider round-range-slider-init"
-            id="ws-cutoff-knob"
-            data-mode="0+"
-            data-min="40"
-            data-max="12000"
-            data-value="2500"
-            data-default-value="2500"
-            data-title="Cutoff"
-            data-unit=" Hz"
-            data-size="80"
-          ></div>
+                <!-- Frequency Mode (Tracking vs Fixed) -->
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                  <span>Режим: <b>${f.tracking ? `Harmonic ×${f.freqMult}` : `${f.freqHz} Hz`}</b></span>
+                  <span>Q: <b>${f.q}</b>${f.gain !== 0 ? ` | Gain: ${f.gain}dB` : ''}</span>
+                </div>
 
-          <div
-            class="round-range-slider round-range-slider-init"
-            id="ws-res-knob"
-            data-mode="0+"
-            data-min="0.5"
-            data-max="20"
-            data-step="0.5"
-            data-value="4"
-            data-default-value="4"
-            data-title="Resonance"
-            data-unit=" Q"
-            data-size="80"
-          ></div>
+                <!-- Live Knobs / Sliders for this filter -->
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                  <span style="font-size: 10px; color: #64748b; width: 45px;">Freq/Mult</span>
+                  <input
+                    type="range"
+                    min=${f.tracking ? "0.5" : "40"}
+                    max=${f.tracking ? "16.0" : "12000"}
+                    step=${f.tracking ? "0.1" : "20"}
+                    value=${f.tracking ? f.freqMult : f.freqHz}
+                    style="flex: 1; height: 4px;"
+                    @input=${(e) => onFilterFreqChange(idx, parseFloat(e.target.value))}
+                  />
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                  <span style="font-size: 10px; color: #64748b; width: 45px;">Res (Q)</span>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="20.0"
+                    step="0.2"
+                    value=${f.q}
+                    style="flex: 1; height: 4px;"
+                    @input=${(e) => onFilterQChange(idx, parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
+            `)}
+          </div>
+        </div>
+      ` : $h``}
+
+      <!-- 4. Global Waveform & Master Controls -->
+      <div class="block-title block-title-medium">
+        <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">knob</i>
+        Форма Хвилі та Керування
+      </div>
+      <div class="block block-strong inset">
+        <div class="margin-bottom-half font-bold">Опорний генератор (Waveform):</div>
+        <div class="segmented segmented-raised margin-bottom">
+          <button class="button ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" @click=${() => setWaveform('sawtooth')}>SAW</button>
+          <button class="button ${activePreset.waveform === 'square' ? 'button-active' : ''}" @click=${() => setWaveform('square')}>SQR</button>
+          <button class="button ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" @click=${() => setWaveform('triangle')}>TRI</button>
+          <button class="button ${activePreset.waveform === 'sine' ? 'button-active' : ''}" @click=${() => setWaveform('sine')}>SIN</button>
         </div>
 
         <div class="grid grid-cols-2 grid-gap margin-top">
@@ -116,10 +162,10 @@
         </div>
       </div>
 
-      <!-- 3. Polyphonic Touch Piano Keyboard -->
+      <!-- 5. Polyphonic Touch Piano Keyboard (C4 - C5) -->
       <div class="block-title block-title-medium">
         <i class="icon t4-icons margin-right-half" style="font-size: 18px; vertical-align: middle;">tuningfork</i>
-        Polyphonic Touch Keyboard (C4 - C5)
+        Поліфонічна клавіатура (C4 - C5)
       </div>
       <div class="block block-strong inset piano-block-container" style="padding: 12px 6px; overflow-x: auto;">
         <div class="piano-keyboard-wrapper" style="position: relative; height: 140px; min-width: 320px; user-select: none; touch-action: none;">
@@ -128,7 +174,7 @@
             ${whiteKeys.map((k) => $h`
               <div
                 class="piano-key white-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
-                style="flex: 1; border: 1px solid #cbd5e1; background: ${activeKeys[k.note] ? '#38bdf8' : '#fff'}; border-radius: 0 0 6px 6px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 8px; cursor: pointer;"
+                style="flex: 1; border: 1px solid #cbd5e1; background: ${activeKeys[k.note] ? '#38bdf8' : '#fff'}; border-radius: 0 0 6px 6px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 8px; cursor: pointer; transition: background 0.05s;"
                 @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
                 @pointerup=${(e) => onKeyPointerUp(e, k.note)}
                 @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
@@ -142,7 +188,7 @@
             ${blackKeys.map((k) => $h`
               <div
                 class="piano-key black-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
-                style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: ${activeKeys[k.note] ? '#0284c7' : '#0f172a'}; border-radius: 0 0 4px 4px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer;"
+                style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: ${activeKeys[k.note] ? '#0284c7' : '#0f172a'}; border-radius: 0 0 4px 4px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.05s;"
                 @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
                 @pointerup=${(e) => onKeyPointerUp(e, k.note)}
                 @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
@@ -157,22 +203,18 @@
   </div>
 </template>
 <script>
+import { synthEngine } from '../audio/filter-bank-synth.js';
+import { INSTRUMENT_PRESETS } from '../audio/presets.js';
+
 export default (props, { $, $on, $update }) => {
-  let audioCtx = null;
-  let masterGain = null;
-  let filterNode = null;
-  let analyser = null;
-  let waveform = 'sawtooth';
-  let volume = 75;
-  let detune = 0;
-  let cutoff = 2500;
-  let resonance = 4;
-  let activeVoiceCount = 0;
-  let animFrameId = null;
   let isDemoPlaying = false;
   let demoTimerId = null;
+  let animFrameId = null;
+  let showFilterRack = true;
 
-  const activeVoices = new Map();
+  const presets = INSTRUMENT_PRESETS;
+  let activePreset = synthEngine.getActivePreset();
+  let activeVoiceCount = 0;
   const activeKeys = {};
 
   const whiteKeys = [
@@ -194,43 +236,24 @@ export default (props, { $, $on, $update }) => {
     { note: 'A#4', freq: 466.16, offsetPct: 70.5 },
   ];
 
-  function ensureAudioRunning() {
-    if (!audioCtx) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContextClass();
-
-      masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(volume / 100, audioCtx.currentTime);
-
-      filterNode = audioCtx.createBiquadFilter();
-      filterNode.type = 'lowpass';
-      filterNode.frequency.setValueAtTime(cutoff, audioCtx.currentTime);
-      filterNode.Q.setValueAtTime(resonance, audioCtx.currentTime);
-
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
-
-      masterGain.connect(filterNode);
-      filterNode.connect(analyser);
-      analyser.connect(audioCtx.destination);
-
-      startOscilloscope();
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+  function ensureAudio() {
+    synthEngine.init();
+    synthEngine.resume();
+    startOscilloscope();
   }
 
   function startOscilloscope() {
+    if (animFrameId) return;
     const canvas = document.getElementById('audio-workshop-canvas');
-    if (!canvas) return;
+    if (!canvas || !synthEngine.analyser) return;
+
     const ctx = canvas.getContext('2d');
-    const bufferLength = analyser.frequencyBinCount;
+    const bufferLength = synthEngine.analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
     function draw() {
       animFrameId = requestAnimationFrame(draw);
-      analyser.getByteTimeDomainData(dataArray);
+      synthEngine.analyser.getByteTimeDomainData(dataArray);
 
       ctx.fillStyle = '#080c14';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -255,51 +278,60 @@ export default (props, { $, $on, $update }) => {
     draw();
   }
 
+  function selectInstrument(presetId) {
+    ensureAudio();
+    activePreset = synthEngine.loadPreset(presetId);
+    $update();
+  }
+
+  function toggleFilterBypass(idx) {
+    const f = activePreset.filters[idx];
+    if (!f) return;
+    f.bypass = !f.bypass;
+    synthEngine.updateFilter(idx, { bypass: f.bypass });
+    $update();
+  }
+
+  function onFilterFreqChange(idx, val) {
+    const f = activePreset.filters[idx];
+    if (!f) return;
+    if (f.tracking) {
+      f.freqMult = val;
+      synthEngine.updateFilter(idx, { freqMult: val });
+    } else {
+      f.freqHz = val;
+      synthEngine.updateFilter(idx, { freqHz: val });
+    }
+    $update();
+  }
+
+  function onFilterQChange(idx, val) {
+    const f = activePreset.filters[idx];
+    if (!f) return;
+    f.q = val;
+    synthEngine.updateFilter(idx, { q: val });
+    $update();
+  }
+
+  function setWaveform(w) {
+    ensureAudio();
+    activePreset.waveform = w;
+    synthEngine.setWaveform(w);
+    $update();
+  }
+
   function playNote(note, freq) {
-    ensureAudioRunning();
-    stopNote(note);
-
-    const osc = audioCtx.createOscillator();
-    const voiceGain = audioCtx.createGain();
-
-    osc.type = waveform;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    osc.detune.setValueAtTime(detune, audioCtx.currentTime);
-
-    const now = audioCtx.currentTime;
-    voiceGain.gain.setValueAtTime(0.001, now);
-    voiceGain.gain.exponentialRampToValueAtTime(0.6, now + 0.02);
-
-    osc.connect(voiceGain);
-    voiceGain.connect(masterGain);
-    osc.start();
-
-    activeVoices.set(note, { osc, gain: voiceGain });
+    ensureAudio();
     activeKeys[note] = true;
-    activeVoiceCount = activeVoices.size;
+    synthEngine.triggerAttack(note, freq, 0.85);
+    activeVoiceCount = synthEngine.getActiveVoiceCount();
     $update();
   }
 
   function stopNote(note) {
-    if (!activeVoices.has(note)) return;
-    const voice = activeVoices.get(note);
-    activeVoices.delete(note);
     delete activeKeys[note];
-    activeVoiceCount = activeVoices.size;
-
-    if (audioCtx && voice && voice.gain) {
-      const now = audioCtx.currentTime;
-      voice.gain.gain.cancelScheduledValues(now);
-      voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
-      voice.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
-      setTimeout(() => {
-        try {
-          voice.osc.stop();
-          voice.osc.disconnect();
-          voice.gain.disconnect();
-        } catch (e) {}
-      }, 90);
-    }
+    synthEngine.triggerRelease(note);
+    activeVoiceCount = synthEngine.getActiveVoiceCount();
     $update();
   }
 
@@ -309,14 +341,7 @@ export default (props, { $, $on, $update }) => {
       demoTimerId = null;
       isDemoPlaying = false;
     }
-    activeVoices.forEach((voice) => {
-      try {
-        voice.osc.stop();
-        voice.osc.disconnect();
-        voice.gain.disconnect();
-      } catch (e) {}
-    });
-    activeVoices.clear();
+    synthEngine.panic();
     Object.keys(activeKeys).forEach((k) => delete activeKeys[k]);
     activeVoiceCount = 0;
     $update();
@@ -336,20 +361,12 @@ export default (props, { $, $on, $update }) => {
     stopNote(note);
   }
 
-  function setWaveform(w) {
-    waveform = w;
-    activeVoices.forEach((v) => {
-      try { v.osc.type = w; } catch (e) {}
-    });
-    $update();
-  }
-
   function playDemoMelody() {
     if (isDemoPlaying) {
       panicAllNotesOff();
       return;
     }
-    ensureAudioRunning();
+    ensureAudio();
     isDemoPlaying = true;
     const melody = [
       { note: 'C4', freq: 261.63, dur: 220 },
@@ -374,51 +391,15 @@ export default (props, { $, $on, $update }) => {
   }
 
   $on('pageInit', () => {
-    // Bind Round Range Sliders
-    $('#ws-volume-knob').on('roundrange:change change', (e) => {
-      if (e.target.f7RoundRange) {
-        volume = e.target.f7RoundRange.value;
-        if (masterGain && audioCtx) {
-          masterGain.gain.setTargetAtTime(volume / 100, audioCtx.currentTime, 0.02);
-        }
-      }
-    });
-
-    $('#ws-detune-knob').on('roundrange:change change', (e) => {
-      if (e.target.f7RoundRange) {
-        detune = e.target.f7RoundRange.value;
-        activeVoices.forEach((v) => {
-          if (v.osc && audioCtx) v.osc.detune.setValueAtTime(detune, audioCtx.currentTime);
-        });
-      }
-    });
-
-    $('#ws-cutoff-knob').on('roundrange:change change', (e) => {
-      if (e.target.f7RoundRange) {
-        cutoff = e.target.f7RoundRange.value;
-        if (filterNode && audioCtx) {
-          filterNode.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.02);
-        }
-      }
-    });
-
-    $('#ws-res-knob').on('roundrange:change change', (e) => {
-      if (e.target.f7RoundRange) {
-        resonance = e.target.f7RoundRange.value;
-        if (filterNode && audioCtx) {
-          filterNode.Q.setTargetAtTime(resonance, audioCtx.currentTime, 0.02);
-        }
-      }
-    });
+    ensureAudio();
   });
 
   $on('pageBeforeRemove', () => {
-    if (animFrameId) cancelAnimationFrame(animFrameId);
-    panicAllNotesOff();
-    if (audioCtx) {
-      audioCtx.close();
-      audioCtx = null;
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
     }
+    panicAllNotesOff();
   });
 
   return $render;
