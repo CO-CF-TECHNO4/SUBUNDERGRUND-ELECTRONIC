@@ -1,0 +1,88 @@
+[provider-transport-fetch] [model-fetch] start provider=microsoft-foundry api=openai-completions model=grok-4.6 method=POST url=https://blowiblowingmind.services.ai.azure.com/openai/v1/chat/completions timeoutMs=undefined proxy=none policy=custom
+[provider-transport-fetch] [model-fetch] response provider=microsoft-foundry api=openai-completions model=grok-4.6 status=200 elapsedMs=16388 contentType=text/event-stream
+model.run via local
+provider: microsoft-foundry
+model: grok-4.6
+outputs: 1
+[
+  {
+    "id": "berlin-dub-chord",
+    "name": "Berlin Dub Chord",
+    "category": "Dub Techno",
+    "description": "Parallel resonant bandpass choir voiced as a tracked minor-7 (1–b3–5–b7–8–12). Tight formant Q on the upper partials, wider Q on the root for body. Tape warmth from a 280 Hz peaking bump plus a gentle 4.8 kHz Butterworth roll-off — Basic Channel / Rhythm & Sound harmonic fog.",
+    "icon": "waveform_path",
+    "color": "blue",
+    "waveform": "sawtooth",
+    "envelope": { "attack": 0.07, "decay": 0.82, "sustain": 0.4, "release": 1.55 },
+    "filters": [
+      { "id": 1, "name": "Root Formant", "type": "bandpass", "tracking": true, "freqMult": 1.0, "freqHz": 110, "q": 6.5, "gain": 0, "bypass": false },
+      { "id": 2, "name": "Minor Third", "type": "bandpass", "tracking": true, "freqMult": 1.1892, "freqHz": 131, "q": 9.2, "gain": 0, "bypass": false },
+      { "id": 3, "name": "Fifth Formant", "type": "bandpass", "tracking": true, "freqMult": 1.4983, "freqHz": 165, "q": 10.5, "gain": 0, "bypass": false },
+      { "id": 4, "name": "Minor Seventh", "type": "bandpass", "tracking": true, "freqMult": 1.7818, "freqHz": 196, "q": 8.4, "gain": 0, "bypass": false },
+      { "id": 5, "name": "Octave Formant", "type": "bandpass", "tracking": true, "freqMult": 2.0, "freqHz": 220, "q": 7.8, "gain": 0, "bypass": false },
+      { "id": 6, "name": "Twelfth Formant", "type": "bandpass", "tracking": true, "freqMult": 2.9966, "freqHz": 330, "q": 12.0, "gain": 0, "bypass": false },
+      { "id": 7, "name": "Tape Body", "type": "peaking", "tracking": false, "freqMult": 1.0, "freqHz": 280, "q": 1.15, "gain": 4.2, "bypass": false },
+      { "id": 8, "name": "Tape Warmth LP", "type": "lowpass", "tracking": false, "freqMult": 1.0, "freqHz": 4800, "q": 0.67, "gain": 0, "bypass": false }
+    ]
+  },
+  {
+    "id": "industrial-kick-sub-rumble",
+    "name": "Industrial Kick / Sub Rumble",
+    "category": "Industrial Techno",
+    "description": "Filter-ping kick: impulse envelope slams a near-self-oscillating 58 Hz lowpass and a 34 Hz rumble bandpass for warehouse-floor thump. Punch and chest peaks at 80/160 Hz, a 300 Hz notch clears boxiness, mid bandpass adds iron growl, 2.8 kHz beater for chain-reaction transient.",
+    "icon": "activity",
+    "color": "red",
+    "waveform": "sine",
+    "envelope": { "attack": 0.001, "decay": 0.26, "sustain": 0.0, "release": 0.34 },
+    "filters": [
+      { "id": 1, "name": "Sub Rumble", "type": "bandpass", "tracking": false, "freqMult": 1.0, "freqHz": 34, "q": 17.5, "gain": 0, "bypass": false },
+      { "id": 2, "name": "Thump Resonator", "type": "lowpass", "tracking": false, "freqMult": 1.0, "freqHz": 58, "q": 9.8, "gain": 0, "bypass": false },
+      { "id": 3, "name": "Punch Peak", "type": "peaking", "tracking": false, "freqMult": 1.0, "freqHz": 80, "q": 2.9, "gain": 8.5, "bypass": false },
+      { "id": 4, "name": "Chest Body", "type": "peaking", "tracking": false, "freqMult": 1.0, "freqHz": 160, "q": 1.85, "gain": 3.8, "bypass": false },
+      { "id": 5, "name": "Mud Notch", "type": "notch", "tracking": false, "freqMult": 1.0, "freqHz": 300, "q": 4.2, "gain": 0, "bypass": false },
+      { "id": 6, "name": "Iron Growl", "type": "bandpass", "tracking": false, "freqMult": 1.0, "freqHz": 510, "q": 3.6, "gain": 0, "bypass": false },
+      { "id": 7, "name": "Beater Click", "type": "peaking", "tracking": false, "freqMult": 1.0, "freqHz": 2800, "q": 2.35, "gain": 6.8, "bypass": false },
+      { "id": 8, "name": "Ceiling LP", "type": "lowpass", "tracking": false, "freqMult": 1.0, "freqHz": 7200, "q": 0.707, "gain": 0, "bypass": false }
+    ]
+  },
+  {
+    "id": "detroit-acid-screamer",
+    "name": "Detroit Acid Screamer",
+    "category": "Acid Techno",
+    "description": "Stacked extreme-Q acid: resonant highpass bite at the tracking fundamental, then a near-self-oscillating lowpass core (Q 19) plus twin scream bandpasses. Presence peak and air shelf push the howl through a dense floor — raw Detroit 303 energy, no champagne, all smoke.",
+    "icon": "zap",
+    "color": "green",
+    "waveform": "sawtooth",
+    "envelope": { "attack": 0.003, "decay": 0.3, "sustain": 0.05, "release": 0.13 },
+    "filters": [
+      { "id": 1, "name": "Sub Tight HP", "type": "highpass", "tracking": false, "freqMult": 1.0, "freqHz": 68, "q": 1.35, "gain": 0, "bypass": false },
+      { "id": 2, "name": "Acid Bite HP", "type": "highpass", "tracking": true, "freqMult": 1.0, "freqHz": 210, "q": 6.8, "gain": 0, "bypass": false },
+      { "id": 3, "name": "Scream LP Core", "type": "lowpass", "tracking": true, "freqMult": 2.4, "freqHz": 920, "q": 19.0, "gain": 0, "bypass": false },
+      { "id": 4, "name": "Resonant Spike", "type": "peaking", "tracking": true, "freqMult": 3.0, "freqHz": 1180, "q": 13.5, "gain": 7.5, "bypass": false },
+      { "id": 5, "name": "Mid Scream BP", "type": "bandpass", "tracking": true, "freqMult": 4.2, "freqHz": 1650, "q": 17.0, "gain": 0, "bypass": false },
+      { "id": 6, "name": "Upper Harmonic BP", "type": "bandpass", "tracking": true, "freqMult": 6.0, "freqHz": 2480, "q": 11.5, "gain": 0, "bypass": false },
+      { "id": 7, "name": "Presence Peak", "type": "peaking", "tracking": false, "freqMult": 1.0, "freqHz": 3900, "q": 4.4, "gain": 5.2, "bypass": false },
+      { "id": 8, "name": "Air Shelf", "type": "highshelf", "tracking": false, "freqMult": 1.0, "freqHz": 7200, "q": 0.72, "gain": 2.4, "bypass": false }
+    ]
+  },
+  {
+    "id": "dark-drone-texture",
+    "name": "Dark Drone Texture",
+    "category": "Drone Techno",
+    "description": "Four-stage allpass lattice (geometric 87–173–311–547 Hz) for slow atmospheric phase thickness, plus dark peaking formants and a 1.9 kHz veil lowpass. Fixed-frequency allpass keeps the spatial comb independent of pitch; tracked body peak follows the note. Subterranean, hollow, endlessly dense.",
+    "icon": "waves",
+    "color": "purple",
+    "waveform": "sawtooth",
+    "envelope": { "attack": 2.35, "decay": 1.7, "sustain": 0.9, "release": 4.2 },
+    "filters": [
+      { "id": 1, "name": "Sub Gate HP", "type": "highpass", "tracking": false, "freqMult": 1.0, "freqHz": 32, "q": 0.6, "gain": 0, "bypass": false },
+      { "id": 2, "name": "Phase Stage 1", "type": "allpass", "tracking": false, "freqMult": 1.0, "freqHz": 87, "q": 1.7, "gain": 0, "bypass": false },
+      { "id": 3, "name": "Dark Body Peak", "type": "peaking", "tracking": true, "freqMult": 1.0, "freqHz": 110, "q": 2.2, "gain": 5.4, "bypass": false },
+      { "id": 4, "name": "Phase Stage 2", "type": "allpass", "tracking": false, "freqMult": 1.0, "freqHz": 173, "q": 2.05, "gain": 0, "bypass": false },
+      { "id": 5, "name": "Hollow Formant", "type": "peaking", "tracking": false, "freqMult": 1.0, "freqHz": 390, "q": 3.4, "gain": -5.0, "bypass": false },
+      { "id": 6, "name": "Phase Stage 3", "type": "allpass", "tracking": false, "freqMult": 1.0, "freqHz": 311, "q": 1.55, "gain": 0, "bypass": false },
+      { "id": 7, "name": "Phase Stage 4", "type": "allpass", "tracking": false, "freqMult": 1.0, "freqHz": 547, "q": 1.85, "gain": 0, "bypass": false },
+      { "id": 8, "name": "Dark Veil LP", "type": "lowpass", "tracking": false, "freqMult": 1.0, "freqHz": 1900, "q": 0.92, "gain": 0, "bypass": false }
+    ]
+  }
+]
