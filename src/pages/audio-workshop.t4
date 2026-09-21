@@ -50,6 +50,24 @@
         >
           <canvas id="audio-workshop-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
 
+          <!-- Top-Left HUD Overlay: Live FPS & Benchmark Button -->
+          <div style="position: absolute; top: 4px; left: 6px; display: flex; align-items: center; gap: 4px; z-index: 5;">
+            <div
+              style="background: rgba(4, 7, 17, 0.88); border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 4px; color: #00f0ff; font-family: monospace; font-size: 8.5px; font-weight: 700; padding: 1px 6px; display: flex; align-items: center; gap: 4px;"
+            >
+              <span id="ws-fps-stat">60.0 FPS</span>
+              <span style="color: #475569;">|</span>
+              <span id="ws-ft-stat">16.6ms</span>
+            </div>
+            <button
+              class="button button-small button-fill color-teal"
+              style="font-size: 8px; height: 18px; line-height: 18px; font-weight: 800; padding: 0 6px; border-radius: 4px; letter-spacing: 0.3px; cursor: pointer; box-shadow: 0 0 6px rgba(0, 240, 255, 0.25);"
+              @click=${openBenchmarkModal}
+            >
+              ⚡ BENCHMARK
+            </button>
+          </div>
+
           <!-- Top HUD Overlay Badges -->
           <div style="position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; pointer-events: none;">
             <span class="badge color-blue" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.name}</span>
@@ -290,16 +308,169 @@
         </div>
       </div>
     </div>
+
+    <!-- Benchmark & Performance Stress Test Modal Overlay -->
+    ${showBenchmarkModal ? $h`
+      <div class="benchmark-overlay" @click=${(e) => { if (e.target.classList.contains('benchmark-overlay')) closeBenchmarkModal(); }}>
+        <div class="benchmark-card">
+          <!-- Modal Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a253a; padding-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i class="icon t4-icons" style="font-size: 18px; color: #00f0ff;">speedometer</i>
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">SUBUNDERGRUND BENCHMARK</div>
+                <div style="font-size: 8.5px; color: #94a3b8;">5-етапний стрес-тест Web Audio API & DSP</div>
+              </div>
+            </div>
+            <button
+              class="button button-small button-circle color-gray"
+              style="width: 22px; height: 22px; min-width: 22px; line-height: 20px; font-size: 11px; padding: 0;"
+              @click=${closeBenchmarkModal}
+              :disabled=${isBenchmarking}
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Testing In Progress View -->
+          ${isBenchmarking ? $h`
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 700; color: #00f0ff;">
+                <span>${benchProgress.name}</span>
+                <span>${benchProgress.pct}%</span>
+              </div>
+              <div class="benchmark-progress-bar-bg">
+                <div class="benchmark-progress-bar-fill" style="width: ${benchProgress.pct}%;"></div>
+              </div>
+              <div style="text-align: center; font-size: 8.5px; color: #64748b; margin-top: 4px; font-family: monospace;">
+                Виконується синтез 64 біквадратних фільтрів та замір частоти кадрів...
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Benchmark Results View -->
+          ${!isBenchmarking && benchResults ? $h`
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Hero Score Box -->
+              <div style="background: linear-gradient(135deg, #0c1829 0%, #08101e 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 8px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">ЗАГАЛЬНИЙ БАЛ ШВИДКОДІЇ</div>
+                  <div style="font-size: 26px; font-weight: 900; color: ${benchResults.score >= 85 ? '#00f0ff' : (benchResults.score >= 70 ? '#f59e0b' : '#ef4444')}; font-family: monospace; line-height: 1.1;">
+                    ${benchResults.score}<span style="font-size: 14px; color: #64748b;">/100</span>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <span class="badge ${benchResults.score >= 85 ? 'color-green' : (benchResults.score >= 70 ? 'color-orange' : 'color-red')}" style="font-size: 10px; font-weight: 800; padding: 3px 8px;">
+                    ${benchResults.grade}
+                  </span>
+                  <div style="font-size: 8px; color: #94a3b8; margin-top: 4px;">
+                    ${benchResults.status}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4 Metrics Grid -->
+              <div class="benchmark-stat-grid">
+                <div class="benchmark-stat-box">
+                  <span class="benchmark-stat-label">Середній / Мін FPS</span>
+                  <span class="benchmark-stat-value">${benchResults.avgFps} <span style="font-size: 10px; color: #64748b;">/ ${benchResults.minFps}</span></span>
+                </div>
+                <div class="benchmark-stat-box">
+                  <span class="benchmark-stat-label">Затримка аудіо буфера</span>
+                  <span class="benchmark-stat-value">${benchResults.audioLatencyMs} <span style="font-size: 10px; color: #64748b;">ms</span></span>
+                </div>
+                <div class="benchmark-stat-box">
+                  <span class="benchmark-stat-label">Дропи кадрів (Jank)</span>
+                  <span class="benchmark-stat-value" style="color: ${benchResults.droppedFrames === 0 ? '#10b981' : '#f59e0b'};">
+                    ${benchResults.droppedFrames} <span style="font-size: 10px; color: #64748b;">кадрів</span>
+                  </span>
+                </div>
+                <div class="benchmark-stat-box">
+                  <span class="benchmark-stat-label">DSP Навантаження</span>
+                  <span class="benchmark-stat-value">64 <span style="font-size: 10px; color: #64748b;">фільтри</span></span>
+                </div>
+              </div>
+
+              <!-- Stage Breakdown -->
+              <div style="background: #060a14; border: 1px solid #141f33; border-radius: 6px; padding: 6px 8px;">
+                <div style="font-size: 8px; font-weight: 800; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Деталізація етапів:</div>
+                <div style="display: flex; flex-direction: column; gap: 2px; font-size: 8.5px; font-family: monospace;">
+                  ${benchResults.stages.map((st) => $h`
+                    <div style="display: flex; justify-content: space-between; color: #cbd5e1;">
+                      <span>${st.name}:</span>
+                      <span style="color: #00f0ff;">${st.duration} ms</span>
+                    </div>
+                  `)}
+                </div>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Initial Idle State View -->
+          ${!isBenchmarking && !benchResults ? $h`
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 9.5px; color: #94a3b8; line-height: 1.4;">
+              <p style="margin: 0;">
+                Цей бенчмарк вимірює стабільність рендерингу інтерфейсу та здатність процесора обробляти 8 одночасних синтезаторних голосів з 64 каскадними біквадратними фільтрами в реальному часі.
+              </p>
+              <div style="background: #060a14; border: 1px solid #141f33; border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; font-family: monospace; font-size: 8.5px; color: #cbd5e1;">
+                <div>• Етап 1: Базова частота кадрів інтерфейсу (Idle UI)</div>
+                <div>• Етап 2: Навантаження 1 голос (8 активних фільтрів)</div>
+                <div>• Етап 3: 4-голосний акорд (32 активні фільтри)</div>
+                <div>• Етап 4: 8-голосний максимум (64 фільтри + модуляція зрізу)</div>
+                <div>• Етап 5: Швидкісне перемикання голосів (16 нот/сек)</div>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Footer Action Buttons -->
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            ${!isBenchmarking ? $h`
+              <button
+                class="button button-fill color-teal"
+                style="flex: 1; height: 32px; line-height: 32px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;"
+                @click=${runBenchmark}
+              >
+                ${benchResults ? 'ПОВТОРИТИ СТРЕС-ТЕСТ' : 'ЗАПУСТИТИ СТРЕС-ТЕСТ'}
+              </button>
+            ` : $h`
+              <button
+                class="button button-fill color-gray"
+                disabled
+                style="flex: 1; height: 32px; line-height: 32px; font-size: 11px; font-weight: 800;"
+              >
+                ТЕСТУВАННЯ ТРИВАЄ...
+              </button>
+            `}
+            <button
+              class="button button-outline color-gray"
+              style="height: 32px; line-height: 30px; font-size: 11px; font-weight: 700; min-width: 80px;"
+              @click=${closeBenchmarkModal}
+              :disabled=${isBenchmarking}
+            >
+              Закрити
+            </button>
+          </div>
+        </div>
+      </div>
+    ` : ''}
   </div>
 </template>
 <script>
 import { synthEngine } from '../audio/filter-bank-synth.js';
 import { INSTRUMENT_PRESETS } from '../audio/presets.js';
+import { perfMonitor, runSynthBenchmark } from '../audio/benchmark.js';
 
 export default (props, { $, $on, $update }) => {
   let isDemoPlaying = false;
   let demoTimerId = null;
   let animFrameId = null;
+  let resizeObs = null;
+
+  // Benchmark suite state
+  let showBenchmarkModal = false;
+  let isBenchmarking = false;
+  let benchProgress = { stage: 0, name: '', pct: 0 };
+  let benchResults = null;
 
   const presets = INSTRUMENT_PRESETS;
   let activePreset = synthEngine.getActivePreset();
@@ -336,6 +507,39 @@ export default (props, { $, $on, $update }) => {
     { note: 'A#4', freq: 466.16, offsetPct: 70.5 },
   ];
 
+  function openBenchmarkModal() {
+    showBenchmarkModal = true;
+    $update();
+  }
+
+  function closeBenchmarkModal() {
+    if (isBenchmarking) return;
+    showBenchmarkModal = false;
+    $update();
+  }
+
+  async function runBenchmark() {
+    if (isBenchmarking) return;
+    ensureAudio();
+    isBenchmarking = true;
+    benchResults = null;
+    benchProgress = { stage: 1, name: 'Підготовка до тестування...', pct: 5 };
+    $update();
+
+    try {
+      const res = await runSynthBenchmark(synthEngine, (prog) => {
+        benchProgress = prog;
+        $update();
+      });
+      benchResults = res;
+    } catch (err) {
+      console.error('Benchmark execution error:', err);
+    } finally {
+      isBenchmarking = false;
+      $update();
+    }
+  }
+
   function updateVoiceCountBadge(count) {
     const badge = document.getElementById('ws-voice-count-badge');
     if (!badge) return;
@@ -362,7 +566,7 @@ export default (props, { $, $on, $update }) => {
     const bufferLength = synthEngine.analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    function resizeCanvas() {
+    function updateCanvasDimensions() {
       const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const targetW = Math.floor(rect.width * dpr);
@@ -373,21 +577,43 @@ export default (props, { $, $on, $update }) => {
       }
     }
 
+    if (window.ResizeObserver) {
+      if (resizeObs) resizeObs.disconnect();
+      resizeObs = new ResizeObserver(() => updateCanvasDimensions());
+      resizeObs.observe(canvas);
+    }
+    updateCanvasDimensions();
+
     let lastDrawTime = 0;
 
     function draw(now) {
       animFrameId = requestAnimationFrame(draw);
 
-      // Frame rate limiter (max ~60fps) to keep main thread completely smooth
-      if (now - lastDrawTime < 15) return;
+      // Smart silence throttle: 60 FPS under active audio, throttled ~15 FPS when silent
+      let isSilent = true;
+      if (synthEngine.getActiveVoiceCount() > 0) {
+        isSilent = false;
+      } else {
+        synthEngine.analyser.getByteTimeDomainData(dataArray);
+        for (let i = 0; i < bufferLength; i += 16) {
+          if (Math.abs(dataArray[i] - 128) > 2) {
+            isSilent = false;
+            break;
+          }
+        }
+      }
+
+      const minInterval = isSilent ? 66 : 16;
+      if (now - lastDrawTime < minInterval) return;
       lastDrawTime = now;
 
-      resizeCanvas();
       const w = canvas.width;
       const h = canvas.height;
       if (!w || !h) return;
 
-      synthEngine.analyser.getByteTimeDomainData(dataArray);
+      if (!isSilent) {
+        synthEngine.analyser.getByteTimeDomainData(dataArray);
+      }
 
       // Deep cyber background
       ctx.fillStyle = '#040711';
@@ -416,20 +642,9 @@ export default (props, { $, $on, $update }) => {
       }
       ctx.stroke();
 
-      // Oscilloscope phosphor wave beam
+      // Dual-pass phosphor wave beam (Zero CPU blur cost, 100% GPU accelerated)
       const sliceWidth = w / (bufferLength - 1);
       let x = 0;
-
-      ctx.save();
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = '#00f0ff';
-      ctx.lineWidth = 2.5;
-
-      const grad = ctx.createLinearGradient(0, 0, w, 0);
-      grad.addColorStop(0, '#00f0ff');
-      grad.addColorStop(0.5, '#10b981');
-      grad.addColorStop(1, '#00f0ff');
-      ctx.strokeStyle = grad;
 
       ctx.beginPath();
       for (let i = 0; i < bufferLength; i += 1) {
@@ -439,8 +654,20 @@ export default (props, { $, $on, $update }) => {
         else ctx.lineTo(x, y);
         x += sliceWidth;
       }
+
+      // Pass 1: Neon ambient glow
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
       ctx.stroke();
-      ctx.restore();
+
+      // Pass 2: High-definition cyber core beam
+      const grad = ctx.createLinearGradient(0, 0, w, 0);
+      grad.addColorStop(0, '#00f0ff');
+      grad.addColorStop(0.5, '#10b981');
+      grad.addColorStop(1, '#00f0ff');
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = grad;
+      ctx.stroke();
     }
 
     animFrameId = requestAnimationFrame(draw);
@@ -570,6 +797,21 @@ export default (props, { $, $on, $update }) => {
   $on('pageInit', () => {
     ensureAudio();
 
+    // Start Real-Time FPS and Frame-Time HUD Monitor (Direct DOM update, zero VDOM diff)
+    perfMonitor.start(({ fps, frameTime }) => {
+      const fpsEl = document.getElementById('ws-fps-stat');
+      const ftEl = document.getElementById('ws-ft-stat');
+      if (fpsEl) {
+        fpsEl.textContent = `${fps.toFixed(1)} FPS`;
+        if (fps >= 55) fpsEl.style.color = '#00f0ff';
+        else if (fps >= 40) fpsEl.style.color = '#f59e0b';
+        else fpsEl.style.color = '#ef4444';
+      }
+      if (ftEl) {
+        ftEl.textContent = `${frameTime.toFixed(1)}ms`;
+      }
+    });
+
     // Bind Native Techno4 Round Range Sliders (single roundrange:change event)
     $('#ws-volume-knob').on('roundrange:change', (e) => {
       if (e.target.f7RoundRange) {
@@ -618,6 +860,11 @@ export default (props, { $, $on, $update }) => {
       cancelAnimationFrame(animFrameId);
       animFrameId = null;
     }
+    if (resizeObs) {
+      resizeObs.disconnect();
+      resizeObs = null;
+    }
+    perfMonitor.stop();
     panicAllNotesOff();
   });
 
