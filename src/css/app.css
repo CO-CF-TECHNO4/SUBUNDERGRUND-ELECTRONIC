@@ -33,101 +33,264 @@ p.row:last-child {
   margin-bottom: 0;
 }
 
-/* Your app custom styles here */
+/* ==========================================================================
+   SUBUNDERGRUND ELECTRONIC - Modern Underground Dark Techno Theme
+   ========================================================================== */
 
-/* 8-Filter Modular Rack & Rotary Knobs Styling */
-.filter-rack-panel {
-  background: rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.1);
+:root {
+  --t4-theme-color: #00f0ff;
+  --t4-theme-color-rgb: 0, 240, 255;
+}
+
+.dark,
+body.dark,
+html.dark {
+  --t4-page-bg-color: #060912;
+  --t4-bars-bg-color: #090e1b;
+  --t4-bars-border-color: #1a2436;
+  --t4-text-color: #f1f5f9;
+  --t4-theme-color: #00f0ff;
+  --t4-round-range-track-color: rgba(255, 255, 255, 0.12);
+  --t4-round-range-dial-bg: #0f172a;
+  --t4-round-range-dial-border: rgba(0, 240, 255, 0.25);
+  --t4-round-range-pointer-color: #00f0ff;
+  --t4-round-range-text-color: #f8fafc;
+  --t4-round-range-title-color: #94a3b8;
+  background-color: #060912 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Navbar & Bottom Tabbar Modernization */
+.dark .navbar,
+.dark .toolbar {
+  background: #080d19 !important;
+  border-color: #1a253a !important;
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
+}
+
+.dark .navbar .title {
+  color: #f8fafc !important;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.dark .tabbar a.tab-link {
+  color: #64748b;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+
+.dark .tabbar a.tab-link-active {
+  color: #00f0ff !important;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+}
+
+/* Presets Bar */
+.presets-bar {
+  scrollbar-width: none;
+}
+.presets-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.preset-btn {
+  background: #0b1120 !important;
+  border: 1px solid #1e293b !important;
+  color: #94a3b8 !important;
+  transition: all 0.15s ease !important;
+}
+.preset-btn.preset-active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+}
+
+/* ==========================================================================
+   Large Oscilloscope Display Deck
+   ========================================================================== */
+.oscilloscope-container {
+  background: #040711 !important;
+  border: 1px solid rgba(0, 240, 255, 0.3) !important;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 240, 255, 0.1) !important;
   border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.oscilloscope-hud-tag {
+  background: rgba(8, 14, 28, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+  font-family: var(--t4-font-mono, monospace);
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Compact Eurorack 8-Filter Modular Rack
+   ========================================================================== */
+.filter-rack-panel {
+  background: #080d1a !important;
+  border: 1px solid #1a2438 !important;
+  border-radius: 7px;
   user-select: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .filter-strips-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 3px;
+  gap: 2px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .filter-channel-strip {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #38bdf8;
-  border-radius: 6px;
-  padding: 3px 2px 2px 2px;
+  background: #0c1424;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 5px;
+  padding: 2px 1px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  transition: opacity 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  transition: opacity 0.12s ease, border-color 0.12s ease;
   overflow: hidden;
   min-width: 0;
 }
 
 .filter-channel-strip.is-bypassed {
-  opacity: 0.42 !important;
-  border-color: #cbd5e1 !important;
-  background: rgba(241, 245, 249, 0.5) !important;
+  opacity: 0.35 !important;
+  border-color: #1a2234 !important;
+  background: #060a14 !important;
 }
 
-/* Compact Round Range Dials for Channel Strips */
+/* Micro Round Range Dials inside Channel Strips */
 .filter-channel-strip .round-range-slider {
-  margin: 1px 0 !important;
+  margin: 0 auto !important;
   cursor: ns-resize;
 }
 
 .filter-channel-strip .round-range-info {
-  margin-top: 1px !important;
+  margin-top: 0px !important;
   line-height: 1 !important;
 }
 
 .filter-channel-strip .round-range-title {
-  font-size: 7.5px !important;
-  font-weight: 700 !important;
+  font-size: 6px !important;
+  font-weight: 800 !important;
   letter-spacing: 0.2px !important;
   color: #64748b !important;
   margin-bottom: 0 !important;
+  line-height: 1 !important;
 }
 
 .filter-channel-strip .round-range-value {
-  font-size: 8.5px !important;
+  font-size: 7.5px !important;
   font-weight: 800 !important;
   font-family: var(--t4-font-mono, monospace) !important;
-  color: #0f172a !important;
+  color: #e2e8f0 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: clip !important;
+  line-height: 1 !important;
 }
 
-/* Color Arcs: Tracking = Cyan, Fixed = Amber, Q = Violet */
+/* Color Progress Arcs: Tracking = Neon Cyan, Fixed = Amber, Q = Violet */
 .filter-channel-strip .filter-freq-knob.freq-tracking .round-range-progress {
-  stroke: #0284c7 !important;
+  stroke: #00f0ff !important;
 }
 
 .filter-channel-strip .filter-freq-knob.freq-fixed .round-range-progress {
-  stroke: #d97706 !important;
+  stroke: #f59e0b !important;
 }
 
 .filter-channel-strip .filter-q-knob .round-range-progress {
-  stroke: #9333ea !important;
+  stroke: #c084fc !important;
 }
 
-/* Mini Dial styling for channel strip knobs */
+/* Micro Dial & Pointer styling */
+.filter-channel-strip .filter-freq-knob .round-range-dial {
+  background: #0f172a !important;
+  border-color: rgba(0, 240, 255, 0.3) !important;
+}
+
+.filter-channel-strip .filter-q-knob .round-range-dial {
+  background: #0c1222 !important;
+  border-color: rgba(192, 132, 252, 0.3) !important;
+}
+
 .filter-channel-strip .filter-freq-knob .round-range-pointer {
-  top: 2px !important;
-  width: 2.5px !important;
-  height: 6.5px !important;
+  top: 1px !important;
+  width: 1.5px !important;
+  height: 4.5px !important;
+  background: #00f0ff !important;
+  box-shadow: 0 0 4px #00f0ff !important;
 }
 
 .filter-channel-strip .filter-q-knob .round-range-pointer {
-  top: 2px !important;
-  width: 2px !important;
-  height: 5.5px !important;
+  top: 1px !important;
+  width: 1.2px !important;
+  height: 4px !important;
+  background: #c084fc !important;
+  box-shadow: 0 0 4px #c084fc !important;
 }
 
 .filter-channel-strip .round-range-tick {
-  stroke: rgba(15, 23, 42, 0.3) !important;
-  stroke-width: 1px !important;
+  stroke: rgba(255, 255, 255, 0.25) !important;
+  stroke-width: 0.8px !important;
+}
+
+/* ==========================================================================
+   Rotary Master Deck
+   ========================================================================== */
+.rotary-controls-deck {
+  background: #080d19 !important;
+  border: 1px solid #1a253a !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.rotary-controls-deck .round-range-title {
+  color: #94a3b8 !important;
+}
+.rotary-controls-deck .round-range-value {
+  color: #00f0ff !important;
+}
+
+/* ==========================================================================
+   Cyberpunk Touch Piano Keyboard
+   ========================================================================== */
+.piano-dock {
+  background: #040711;
+  border: 1px solid #1a2438;
+}
+
+.piano-key.white-key {
+  background: #0d1526 !important;
+  border: 1px solid #1a253a !important;
+  color: #f1f5f9 !important;
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+.piano-key.white-key span:first-child {
+  color: #f8fafc !important;
+}
+.piano-key.white-key span:last-child {
+  color: #64748b !important;
+}
+.piano-key.white-key.key-pressed {
+  background: #00f0ff !important;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.9), inset 0 0 10px #ffffff !important;
+}
+.piano-key.white-key.key-pressed span {
+  color: #040711 !important;
+}
+
+.piano-key.black-key {
+  background: #040710 !important;
+  border: 1px solid #1a253a !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+.piano-key.black-key.key-pressed {
+  background: #0284c7 !important;
+  box-shadow: 0 0 18px rgba(2, 132, 199, 0.95), inset 0 0 8px #38bdf8 !important;
 }

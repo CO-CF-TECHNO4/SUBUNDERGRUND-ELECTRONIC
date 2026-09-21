@@ -5,15 +5,15 @@
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
-          <span class="badge color-green">
+          <span class="badge color-blue" style="font-weight: 800; letter-spacing: 0.5px;">
             <i class="icon t4-icons" style="font-size: 13px; vertical-align: middle;">waveform_path</i>
             8-FILTER SYNTH
           </span>
         </div>
-        <div class="title" style="font-size: 15px; font-weight: 700;">SUBUNDERGRUND AUDIO WORKSHOP</div>
+        <div class="title" style="font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">SUBUNDERGRUND ELECTRONIC</div>
         <div class="right">
-          <button class="button button-small button-fill color-red" style="font-size: 11px; height: 26px; line-height: 26px;" @click=${panicAllNotesOff}>
-            PANIC OFF
+          <button class="button button-small button-fill color-red" style="font-size: 10px; height: 24px; line-height: 24px; font-weight: 700; padding: 0 8px;" @click=${panicAllNotesOff}>
+            PANIC
           </button>
         </div>
       </div>
@@ -22,41 +22,53 @@
     <!-- 100% Height Non-Scrolling View Container -->
     <div
       class="page-content"
-      style="height: 100%; max-height: 100%; overflow: hidden !important; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; padding: calc(var(--t4-page-navbar-offset, 44px) + 3px) 6px calc(var(--t4-page-toolbar-bottom-offset, 48px) + 3px) 6px !important; gap: 4px;"
+      style="height: 100%; max-height: 100%; overflow: hidden !important; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; padding: calc(var(--t4-page-navbar-offset, 44px) + 2px) 6px calc(var(--t4-page-toolbar-bottom-offset, 48px) + 2px) 6px !important; gap: 4px;"
     >
       <!-- Row 1: Compact 12 Instrument Presets Bar -->
       <div
         class="presets-bar"
-        style="display: flex; gap: 4px; overflow-x: auto; flex-shrink: 0; padding: 2px 0; -webkit-overflow-scrolling: touch; scrollbar-width: none;"
+        style="display: flex; gap: 4px; overflow-x: auto; flex-shrink: 0; padding: 1px 0; -webkit-overflow-scrolling: touch;"
       >
         ${presets.map((p) => $h`
           <button
-            class="button button-small ${p.id === activePreset.id ? 'button-fill color-blue' : 'button-outline color-gray'}"
-            style="flex: 1; min-width: 105px; height: 28px; line-height: 26px; padding: 0 6px; font-size: 11px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 6px;"
+            class="button button-small preset-btn ${p.id === activePreset.id ? 'preset-active' : ''}"
+            style="flex: 1; min-width: 100px; height: 26px; line-height: 24px; padding: 0 6px; font-size: 10px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 5px;"
             @click=${() => selectInstrument(p.id)}
           >
-            <i class="icon t4-icons" style="font-size: 13px;">${p.icon || 'waveform_path'}</i>
+            <i class="icon t4-icons" style="font-size: 12px;">${p.icon || 'waveform_path'}</i>
             <span>${p.name}</span>
           </button>
         `)}
       </div>
 
-      <!-- Row 2: Oscilloscope & Rotary Knobs Deck (Split View) -->
-      <div style="display: flex; gap: 6px; flex-shrink: 0; height: 95px; align-items: stretch;">
-        <!-- Left: Real-time Oscilloscope -->
-        <div style="flex: 1; position: relative; background: #080c14; border-radius: 8px; overflow: hidden; border: 1px solid #1e293b; min-width: 140px;">
+      <!-- Row 2: Large Oscilloscope & Master Controls Deck (Split View) -->
+      <div style="display: flex; gap: 6px; flex: 1.3; min-height: 135px; max-height: 240px; align-items: stretch;">
+        <!-- Left: Large High-Tech Cyber Oscilloscope Display -->
+        <div
+          class="oscilloscope-container"
+          style="flex: 2; position: relative; background: #040711; border-radius: 7px; overflow: hidden; border: 1px solid rgba(0, 240, 255, 0.3); box-shadow: inset 0 0 25px rgba(0,0,0,0.9), 0 0 10px rgba(0, 240, 255, 0.08); min-width: 150px; display: flex;"
+        >
           <canvas id="audio-workshop-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+
+          <!-- Top HUD Overlay Badges -->
           <div style="position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; pointer-events: none;">
-            <span class="badge color-blue" style="font-size: 9px; padding: 1px 4px;">${activePreset.name}</span>
-            <span class="badge color-purple" style="font-size: 9px; padding: 1px 4px;">${activePreset.waveform.toUpperCase()}</span>
-            <span class="badge ${activeVoiceCount > 0 ? 'color-green' : 'color-gray'}" style="font-size: 9px; padding: 1px 4px;">VOICES: ${activeVoiceCount}</span>
+            <span class="badge color-blue" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.name}</span>
+            <span class="badge color-purple" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">${activePreset.waveform.toUpperCase()}</span>
+            <span id="ws-voice-count-badge" class="badge color-gray" style="font-size: 8.5px; padding: 1px 5px; font-weight: 700;">VOICES: 0</span>
+          </div>
+
+          <!-- Bottom HUD Overlay: Scale & Frequency Axis Markers -->
+          <div style="position: absolute; bottom: 3px; left: 6px; display: flex; gap: 8px; pointer-events: none; font-size: 8px; font-family: monospace; color: rgba(0, 240, 255, 0.6); font-weight: 700; letter-spacing: 0.5px;">
+            <span>CH1: 50mV/DIV</span>
+            <span>TIME: 2.5ms</span>
+            <span>POLYPHONIC 8-VOICE</span>
           </div>
         </div>
 
         <!-- Right: Analog Rotary Controls Deck (Round Range Sliders) -->
         <div
           class="rotary-controls-deck"
-          style="display: flex; align-items: center; background: rgba(0,0,0,0.04); border-radius: 8px; padding: 2px 6px; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.06); gap: 4px;"
+          style="display: flex; align-items: center; background: #080d19; border-radius: 7px; padding: 2px 5px; box-sizing: border-box; border: 1px solid #1a253a; gap: 3px; flex-shrink: 0;"
         >
           <!-- Circular Slider 1: Master Volume -->
           <div
@@ -67,9 +79,10 @@
             data-max="100"
             data-value="75"
             data-default-value="75"
-            data-title="Volume"
+            data-title="VOL"
             data-unit="%"
-            data-size="48"
+            data-size="42"
+            data-stroke-width="3"
             style="margin: 0 1px !important;"
           ></div>
 
@@ -84,9 +97,10 @@
             data-default-value="0"
             data-snap="true"
             data-snap-values="[0]"
-            data-title="Cutoff"
+            data-title="CUTOFF"
             data-unit="st"
-            data-size="48"
+            data-size="42"
+            data-stroke-width="3"
             style="margin: 0 1px !important;"
           ></div>
 
@@ -100,9 +114,10 @@
             data-step="0.1"
             data-value="1.0"
             data-default-value="1.0"
-            data-title="Reso"
+            data-title="RESO"
             data-unit="x"
-            data-size="48"
+            data-size="42"
+            data-stroke-width="3"
             style="margin: 0 1px !important;"
           ></div>
 
@@ -117,23 +132,25 @@
             data-default-value="0"
             data-snap="true"
             data-snap-values="[0]"
-            data-title="Detune"
+            data-title="DETUNE"
             data-unit="c"
-            data-size="48"
+            data-size="42"
+            data-stroke-width="3"
             style="margin: 0 1px !important;"
           ></div>
 
-          <!-- Quick Waveform & Demo scale strip -->
-          <div style="display: flex; flex-direction: column; justify-content: space-between; height: 86px; width: 68px; flex-shrink: 0; padding-left: 2px;">
-            <div class="segmented segmented-raised" style="height: 20px;">
-              <button class="button ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" style="font-size: 8px; line-height: 18px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
-              <button class="button ${activePreset.waveform === 'square' ? 'button-active' : ''}" style="font-size: 8px; line-height: 18px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
+          <!-- Quick Waveform & Demo strip -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between; height: 86px; width: 62px; flex-shrink: 0; padding-left: 1px;">
+            <div class="segmented segmented-raised" style="height: 19px;">
+              <button class="button ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
+              <button class="button ${activePreset.waveform === 'square' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
             </div>
-            <div class="segmented segmented-raised" style="height: 20px;">
-              <button class="button ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" style="font-size: 8px; line-height: 18px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
-              <button class="button ${activePreset.waveform === 'sine' ? 'button-active' : ''}" style="font-size: 8px; line-height: 18px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
+            <div class="segmented segmented-raised" style="height: 19px;">
+              <button class="button ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
+              <button class="button ${activePreset.waveform === 'sine' ? 'button-active' : ''}" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
             </div>
             <button
+              id="ws-demo-btn"
               class="button button-small button-fill ${isDemoPlaying ? 'color-orange' : 'color-blue'}"
               style="height: 22px; line-height: 22px; font-size: 9px; padding: 0 2px;"
               @click=${playDemoMelody}
@@ -144,18 +161,18 @@
         </div>
       </div>
 
-      <!-- Row 3: 8-Filter Bank Modular Rack (8 Vertical Channel Strips) -->
+      <!-- Row 3: Compact Eurorack 8-Filter Modular Rack -->
       <div
         class="filter-rack-panel"
-        style="flex: 1; min-height: 115px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 3px 6px; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;"
+        style="height: 88px; flex-shrink: 0; background: #080d1a; border: 1px solid #1a2438; border-radius: 7px; padding: 2px 4px; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;"
       >
         <!-- Rack Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 11px; flex-shrink: 0;">
-          <span style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
-            <i class="icon t4-icons" style="font-size: 13px; color: #0284c7;">cpu</i>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 9px; flex-shrink: 0; line-height: 1;">
+          <span style="font-weight: 800; color: #94a3b8; display: flex; align-items: center; gap: 4px; letter-spacing: 0.5px;">
+            <i class="icon t4-icons" style="font-size: 11px; color: #00f0ff;">cpu</i>
             8-FILTER MODULAR RACK
           </span>
-          <span style="color: #64748b; font-size: 10px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;">
+          <span style="color: #64748b; font-size: 8.5px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;">
             ${activePreset.description}
           </span>
         </div>
@@ -163,20 +180,20 @@
         <!-- 8 Filter Channel Strips Grid -->
         <div
           class="filter-strips-grid"
-          style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; flex: 1; height: 100%; min-height: 0;"
+          style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 2px; flex: 1; height: 100%; min-height: 0;"
         >
           ${activePreset.filters.map((f, idx) => $h`
             <div
               class="filter-channel-strip ${f.bypass ? 'is-bypassed' : ''}"
               key=${`filter-strip-${activePreset.id}-${idx}`}
-              style="background: ${f.bypass ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.85)'}; border: 1px solid ${f.bypass ? '#cbd5e1' : '#38bdf8'}; border-radius: 6px; padding: 3px 2px 2px 2px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; box-sizing: border-box; opacity: ${f.bypass ? 0.42 : 1.0}; transition: all 0.1s ease; overflow: hidden; min-width: 0;"
+              style="background: ${f.bypass ? '#060a14' : '#0c1424'}; border: 1px solid ${f.bypass ? '#1a2234' : 'rgba(0, 240, 255, 0.25)'}; border-radius: 5px; padding: 2px 1px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; box-sizing: border-box; opacity: ${f.bypass ? 0.35 : 1.0}; transition: all 0.12s ease; overflow: hidden; min-width: 0;"
             >
               <!-- Strip Top: # and Bypass button -->
               <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; padding: 0 1px;">
-                <span style="font-size: 9px; font-weight: 800; color: #0f172a;">#${f.id}</span>
+                <span style="font-size: 8px; font-weight: 800; color: #94a3b8; font-family: monospace;">#${f.id}</span>
                 <button
                   class="button button-small ${f.bypass ? 'color-gray' : 'button-fill color-green'}"
-                  style="height: 14px; line-height: 14px; font-size: 8px; padding: 0 3px; border-radius: 3px; min-width: 20px;"
+                  style="height: 12px; line-height: 12px; font-size: 7px; padding: 0 3px; border-radius: 2px; min-width: 18px;"
                   @click=${() => toggleFilterBypass(idx)}
                 >
                   ${f.bypass ? 'OFF' : 'ON'}
@@ -184,8 +201,8 @@
               </div>
 
               <!-- Strip Filter Type Badge -->
-              <div style="text-align: center; margin: 1px 0; flex-shrink: 0;">
-                <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 8px; padding: 0 3px; height: 13px; line-height: 13px; font-weight: 700;">
+              <div style="text-align: center; margin: 0; flex-shrink: 0;">
+                <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 7px; padding: 0 2px; height: 11px; line-height: 11px; font-weight: 800; border-radius: 2px;">
                   ${filterTypeLabels[f.type] || f.type.toUpperCase()}
                 </span>
               </div>
@@ -204,10 +221,10 @@
                 data-snap=${f.tracking ? 'true' : 'false'}
                 data-snap-values=${f.tracking ? '[0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 12, 16]' : '[]'}
                 data-snap-threshold=${f.tracking ? '0.18' : '0'}
-                data-title="FREQ"
+                data-title="F"
                 data-unit=${f.tracking ? '×' : 'Hz'}
-                data-size="32"
-                data-stroke-width="3"
+                data-size="24"
+                data-stroke-width="2.2"
                 style="margin: 0 auto !important;"
               ></div>
 
@@ -227,8 +244,8 @@
                 data-snap-threshold="0.3"
                 data-title="Q"
                 data-unit=""
-                data-size="28"
-                data-stroke-width="2.5"
+                data-size="20"
+                data-stroke-width="2.0"
                 style="margin: 0 auto !important;"
               ></div>
             </div>
@@ -239,33 +256,35 @@
       <!-- Row 4: Polyphonic Touch Piano Keyboard (Bottom Docked) -->
       <div
         class="piano-dock"
-        style="height: 105px; flex-shrink: 0; position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); user-select: none; touch-action: none;"
+        style="height: 95px; flex-shrink: 0; position: relative; border-radius: 7px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.5); user-select: none; touch-action: none;"
       >
         <div class="piano-keyboard" style="display: flex; height: 100%; position: relative;">
           <!-- White Keys -->
           ${whiteKeys.map((k) => $h`
             <div
-              class="piano-key white-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
-              style="flex: 1; border: 1px solid #cbd5e1; background: ${activeKeys[k.note] ? '#38bdf8' : '#ffffff'}; border-radius: 0 0 5px 5px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 6px; cursor: pointer; transition: background 0.04s ease;"
+              class="piano-key white-key"
+              data-note=${k.note}
+              style="flex: 1; border: 1px solid #1a253a; background: #0d1526; border-radius: 0 0 4px 4px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.04s ease;"
               @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
               @pointerup=${(e) => onKeyPointerUp(e, k.note)}
               @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
             >
-              <span style="font-size: 11px; font-weight: 800; color: #1e293b;">${k.note}</span>
-              <span style="font-size: 8px; color: #94a3b8;">[${k.keyChar}]</span>
+              <span style="font-size: 10px; font-weight: 800; color: #f8fafc;">${k.note}</span>
+              <span style="font-size: 7.5px; color: #64748b;">[${k.keyChar}]</span>
             </div>
           `)}
 
           <!-- Black Keys -->
           ${blackKeys.map((k) => $h`
             <div
-              class="piano-key black-key ${activeKeys[k.note] ? 'key-pressed' : ''}"
-              style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 62%; background: ${activeKeys[k.note] ? '#0284c7' : '#0f172a'}; border-radius: 0 0 4px 4px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; transition: background 0.04s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+              class="piano-key black-key"
+              data-note=${k.note}
+              style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: #040710; border: 1px solid #1a253a; border-radius: 0 0 3px 3px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 3px; cursor: pointer; transition: background 0.04s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.8);"
               @pointerdown=${(e) => onKeyPointerDown(e, k.note, k.freq)}
               @pointerup=${(e) => onKeyPointerUp(e, k.note)}
               @pointerleave=${(e) => onKeyPointerLeave(e, k.note)}
             >
-              <span style="font-size: 9px; font-weight: 700; color: #f8fafc;">${k.note}</span>
+              <span style="font-size: 8.5px; font-weight: 700; color: #94a3b8;">${k.note}</span>
             </div>
           `)}
         </div>
@@ -317,6 +336,17 @@ export default (props, { $, $on, $update }) => {
     { note: 'A#4', freq: 466.16, offsetPct: 70.5 },
   ];
 
+  function updateVoiceCountBadge(count) {
+    const badge = document.getElementById('ws-voice-count-badge');
+    if (!badge) return;
+    badge.textContent = `VOICES: ${count}`;
+    if (count > 0) {
+      badge.className = 'badge color-green';
+    } else {
+      badge.className = 'badge color-gray';
+    }
+  }
+
   function ensureAudio() {
     synthEngine.init();
     synthEngine.resume();
@@ -328,35 +358,92 @@ export default (props, { $, $on, $update }) => {
     const canvas = document.getElementById('audio-workshop-canvas');
     if (!canvas || !synthEngine.analyser) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     const bufferLength = synthEngine.analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    function draw() {
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const targetW = Math.floor(rect.width * dpr);
+      const targetH = Math.floor(rect.height * dpr);
+      if (targetW > 0 && targetH > 0 && (canvas.width !== targetW || canvas.height !== targetH)) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+    }
+
+    let lastDrawTime = 0;
+
+    function draw(now) {
       animFrameId = requestAnimationFrame(draw);
+
+      // Frame rate limiter (max ~60fps) to keep main thread completely smooth
+      if (now - lastDrawTime < 15) return;
+      lastDrawTime = now;
+
+      resizeCanvas();
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
       synthEngine.analyser.getByteTimeDomainData(dataArray);
 
-      ctx.fillStyle = '#080c14';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Deep cyber background
+      ctx.fillStyle = '#040711';
+      ctx.fillRect(0, 0, w, h);
 
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#00f0ff';
+      // Cyber reticle grid
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+      ctx.lineWidth = 1;
       ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.moveTo(w / 2, 0);
+      ctx.lineTo(w / 2, h);
 
-      const sliceWidth = canvas.width / bufferLength;
+      const gridCols = 8;
+      const gridRows = 4;
+      for (let c = 1; c < gridCols; c += 1) {
+        const gx = (w / gridCols) * c;
+        ctx.moveTo(gx, 0);
+        ctx.lineTo(gx, h);
+      }
+      for (let r = 1; r < gridRows; r += 1) {
+        const gy = (h / gridRows) * r;
+        ctx.moveTo(0, gy);
+        ctx.lineTo(w, gy);
+      }
+      ctx.stroke();
+
+      // Oscilloscope phosphor wave beam
+      const sliceWidth = w / (bufferLength - 1);
       let x = 0;
 
+      ctx.save();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#00f0ff';
+      ctx.lineWidth = 2.5;
+
+      const grad = ctx.createLinearGradient(0, 0, w, 0);
+      grad.addColorStop(0, '#00f0ff');
+      grad.addColorStop(0.5, '#10b981');
+      grad.addColorStop(1, '#00f0ff');
+      ctx.strokeStyle = grad;
+
+      ctx.beginPath();
       for (let i = 0; i < bufferLength; i += 1) {
         const v = dataArray[i] / 128.0;
-        const y = (v * canvas.height) / 2;
+        const y = (v * h) / 2;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
         x += sliceWidth;
       }
-      ctx.lineTo(canvas.width, canvas.height / 2);
       ctx.stroke();
+      ctx.restore();
     }
-    draw();
+
+    animFrameId = requestAnimationFrame(draw);
   }
 
   function selectInstrument(presetId) {
@@ -403,15 +490,17 @@ export default (props, { $, $on, $update }) => {
     ensureAudio();
     activeKeys[note] = true;
     synthEngine.triggerAttack(note, freq, 0.85);
-    activeVoiceCount = synthEngine.getActiveVoiceCount();
-    $update();
+    const keyEl = document.querySelector(`.piano-key[data-note="${note}"]`);
+    if (keyEl) keyEl.classList.add('key-pressed');
+    updateVoiceCountBadge(synthEngine.getActiveVoiceCount());
   }
 
   function stopNote(note) {
     delete activeKeys[note];
     synthEngine.triggerRelease(note);
-    activeVoiceCount = synthEngine.getActiveVoiceCount();
-    $update();
+    const keyEl = document.querySelector(`.piano-key[data-note="${note}"]`);
+    if (keyEl) keyEl.classList.remove('key-pressed');
+    updateVoiceCountBadge(synthEngine.getActiveVoiceCount());
   }
 
   function panicAllNotesOff() {
@@ -419,11 +508,16 @@ export default (props, { $, $on, $update }) => {
       clearInterval(demoTimerId);
       demoTimerId = null;
       isDemoPlaying = false;
+      const demoBtn = document.getElementById('ws-demo-btn');
+      if (demoBtn) {
+        demoBtn.textContent = 'Demo';
+        demoBtn.className = 'button button-small button-fill color-blue';
+      }
     }
     synthEngine.panic();
     Object.keys(activeKeys).forEach((k) => delete activeKeys[k]);
-    activeVoiceCount = 0;
-    $update();
+    document.querySelectorAll('.piano-key.key-pressed').forEach((el) => el.classList.remove('key-pressed'));
+    updateVoiceCountBadge(0);
   }
 
   function onKeyPointerDown(e, note, freq) {
@@ -447,6 +541,11 @@ export default (props, { $, $on, $update }) => {
     }
     ensureAudio();
     isDemoPlaying = true;
+    const demoBtn = document.getElementById('ws-demo-btn');
+    if (demoBtn) {
+      demoBtn.textContent = 'Stop';
+      demoBtn.className = 'button button-small button-fill color-orange';
+    }
     const melody = [
       { note: 'C4', freq: 261.63, dur: 220 },
       { note: 'E4', freq: 329.63, dur: 220 },
@@ -466,21 +565,19 @@ export default (props, { $, $on, $update }) => {
       setTimeout(() => stopNote(melody[step].note), melody[step].dur - 30);
       step += 1;
     }, 280);
-    $update();
   }
 
   $on('pageInit', () => {
     ensureAudio();
 
-    // Bind Native Techno4 Round Range Sliders
-    $('#ws-volume-knob').on('roundrange:change roundrange:input change', (e) => {
+    // Bind Native Techno4 Round Range Sliders (single roundrange:change event)
+    $('#ws-volume-knob').on('roundrange:change', (e) => {
       if (e.target.f7RoundRange) {
-        const vol = Math.round(e.target.f7RoundRange.value);
-        synthEngine.setVolume(vol);
+        synthEngine.setVolume(Math.round(e.target.f7RoundRange.value));
       }
     });
 
-    $('#ws-cutoff-knob').on('roundrange:change roundrange:input change', (e) => {
+    $('#ws-cutoff-knob').on('roundrange:change', (e) => {
       if (e.target.f7RoundRange) {
         const semitones = e.target.f7RoundRange.value;
         const factor = Math.pow(2, semitones / 12);
@@ -488,29 +585,27 @@ export default (props, { $, $on, $update }) => {
       }
     });
 
-    $('#ws-res-knob').on('roundrange:change roundrange:input change', (e) => {
+    $('#ws-res-knob').on('roundrange:change', (e) => {
       if (e.target.f7RoundRange) {
-        const qFactor = e.target.f7RoundRange.value;
-        synthEngine.setResonanceBias(qFactor);
+        synthEngine.setResonanceBias(e.target.f7RoundRange.value);
       }
     });
 
-    $('#ws-detune-knob').on('roundrange:change roundrange:input change', (e) => {
+    $('#ws-detune-knob').on('roundrange:change', (e) => {
       if (e.target.f7RoundRange) {
-        const cents = e.target.f7RoundRange.value;
-        synthEngine.setDetune(cents);
+        synthEngine.setDetune(e.target.f7RoundRange.value);
       }
     });
 
-    // Bind 8-Filter Modular Rack Knobs via Event Delegation
-    $('.filter-rack-panel').on('roundrange:change change', '.filter-freq-knob', function () {
+    // Bind 8-Filter Modular Rack Knobs via Event Delegation (single roundrange:change event)
+    $('.filter-rack-panel').on('roundrange:change', '.filter-freq-knob', function () {
       if (!this.f7RoundRange) return;
       const idx = parseInt(this.getAttribute('data-index'), 10);
       const val = this.f7RoundRange.value;
       onFilterFreqChange(idx, val);
     });
 
-    $('.filter-rack-panel').on('roundrange:change change', '.filter-q-knob', function () {
+    $('.filter-rack-panel').on('roundrange:change', '.filter-q-knob', function () {
       if (!this.f7RoundRange) return;
       const idx = parseInt(this.getAttribute('data-index'), 10);
       const val = this.f7RoundRange.value;
