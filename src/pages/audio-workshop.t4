@@ -12,7 +12,7 @@
         </div>
         <div class="title" style="font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">SUBUNDERGRUND ELECTRONIC</div>
         <div class="right">
-          <button class="button button-small button-fill color-red" style="font-size: 10px; height: 24px; line-height: 24px; font-weight: 700; padding: 0 8px;" @click=${panicAllNotesOff}>
+          <button class="button button-small button-fill color-red no-active-state no-ripple" style="font-size: 10px; height: 24px; line-height: 24px; font-weight: 700; padding: 0 8px;" @click=${panicAllNotesOff}>
             PANIC
           </button>
         </div>
@@ -31,9 +31,9 @@
       >
         ${presets.map((p) => $h`
           <button
-            class="button button-small preset-btn ${p.id === activePreset.id ? 'preset-active' : ''}"
+            class="button button-small preset-btn no-active-state no-ripple ${p.id === activePreset.id ? 'preset-active' : ''}"
             data-id=${p.id}
-            style="flex: 1; min-width: 100px; height: 26px; line-height: 24px; padding: 0 6px; font-size: 10px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 5px;"
+            style="flex: 1; min-width: 100px; height: 26px; line-height: 24px; padding: 0 6px; font-size: 10px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 5px; touch-action: manipulation;"
             @click=${() => selectInstrument(p.id)}
           >
             <i class="icon t4-icons" style="font-size: 12px; pointer-events: none;">${p.icon || 'waveform_path'}</i>
@@ -61,7 +61,7 @@
               <span id="ws-ft-stat">16.6ms</span>
             </div>
             <button
-              class="button button-small button-fill color-teal"
+              class="button button-small button-fill color-teal no-active-state no-ripple"
               style="font-size: 8px; height: 18px; line-height: 18px; font-weight: 800; padding: 0 6px; border-radius: 4px; letter-spacing: 0.3px; cursor: pointer; box-shadow: 0 0 6px rgba(0, 240, 255, 0.25);"
               @click=${openBenchmarkModal}
             >
@@ -161,16 +161,16 @@
           <!-- Quick Waveform & Demo strip -->
           <div style="display: flex; flex-direction: column; justify-content: space-between; height: 86px; width: 62px; flex-shrink: 0; padding-left: 1px;">
             <div class="segmented segmented-raised" style="height: 19px;">
-              <button class="button waveform-btn ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" data-waveform="sawtooth" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
-              <button class="button waveform-btn ${activePreset.waveform === 'square' ? 'button-active' : ''}" data-waveform="square" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
+              <button class="button waveform-btn no-active-state no-ripple ${activePreset.waveform === 'sawtooth' ? 'button-active' : ''}" data-waveform="sawtooth" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sawtooth')}>SAW</button>
+              <button class="button waveform-btn no-active-state no-ripple ${activePreset.waveform === 'square' ? 'button-active' : ''}" data-waveform="square" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('square')}>SQR</button>
             </div>
             <div class="segmented segmented-raised" style="height: 19px;">
-              <button class="button waveform-btn ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" data-waveform="triangle" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
-              <button class="button waveform-btn ${activePreset.waveform === 'sine' ? 'button-active' : ''}" data-waveform="sine" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
+              <button class="button waveform-btn no-active-state no-ripple ${activePreset.waveform === 'triangle' ? 'button-active' : ''}" data-waveform="triangle" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('triangle')}>TRI</button>
+              <button class="button waveform-btn no-active-state no-ripple ${activePreset.waveform === 'sine' ? 'button-active' : ''}" data-waveform="sine" style="font-size: 8px; line-height: 17px; padding: 0;" @click=${() => setWaveform('sine')}>SIN</button>
             </div>
             <button
               id="ws-demo-btn"
-              class="button button-small button-fill ${isDemoPlaying ? 'color-orange' : 'color-blue'}"
+              class="button button-small button-fill no-active-state no-ripple ${isDemoPlaying ? 'color-orange' : 'color-blue'}"
               style="height: 22px; line-height: 22px; font-size: 9px; padding: 0 2px;"
               @click=${playDemoMelody}
             >
@@ -213,7 +213,7 @@
                 <span style="font-size: 8px; font-weight: 800; color: #94a3b8; font-family: monospace;">#${f.id}</span>
                 <button
                   id=${`ws-filter-bypass-btn-${idx}`}
-                  class="button button-small ${f.bypass ? 'color-gray' : 'button-fill color-green'}"
+                  class="button button-small no-active-state no-ripple ${f.bypass ? 'color-gray' : 'button-fill color-green'}"
                   style="height: 12px; line-height: 12px; font-size: 7px; padding: 0 3px; border-radius: 2px; min-width: 18px;"
                   @click=${() => toggleFilterBypass(idx)}
                 >
@@ -288,10 +288,12 @@
               class="piano-key white-key no-active-state no-ripple"
               data-note=${k.note}
               data-freq=${k.freq}
-              style="flex: 1; border: 1px solid #1a253a; background: #0d1526; border-radius: 0 0 4px 4px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer;"
+              style="flex: 1; border: 1px solid #1a253a; background: #0d1526; border-radius: 0 0 4px 4px; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 4px; cursor: pointer; touch-action: none;"
               @pointerdown=${(e) => onDirectKeyPointerDown(e, k.note, k.freq)}
               @pointerup=${(e) => onDirectKeyPointerUp(e, k.note)}
               @pointerleave=${(e) => onDirectKeyPointerLeave(e, k.note)}
+              @pointerenter=${(e) => onDirectKeyPointerEnter(e, k.note, k.freq)}
+              @pointercancel=${(e) => onDirectKeyPointerCancel(e, k.note)}
             >
               <span style="font-size: 10px; font-weight: 800; color: #f8fafc; pointer-events: none;">${k.note}</span>
               <span class="hotkey-hint" style="font-size: 7.5px; color: #64748b; font-weight: 700; pointer-events: none;">[${k.keyChar}]</span>
@@ -304,10 +306,12 @@
               class="piano-key black-key no-active-state no-ripple"
               data-note=${k.note}
               data-freq=${k.freq}
-              style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: #040710; border: 1px solid #1a253a; border-radius: 0 0 3px 3px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 3px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.8);"
+              style="position: absolute; left: ${k.offsetPct}%; width: 8.5%; height: 60%; background: #040710; border: 1px solid #1a253a; border-radius: 0 0 3px 3px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 3px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.8); touch-action: none;"
               @pointerdown=${(e) => onDirectKeyPointerDown(e, k.note, k.freq)}
               @pointerup=${(e) => onDirectKeyPointerUp(e, k.note)}
               @pointerleave=${(e) => onDirectKeyPointerLeave(e, k.note)}
+              @pointerenter=${(e) => onDirectKeyPointerEnter(e, k.note, k.freq)}
+              @pointercancel=${(e) => onDirectKeyPointerCancel(e, k.note)}
             >
               <span style="font-size: 8px; font-weight: 700; color: #94a3b8; pointer-events: none; line-height: 1.1;">${k.note}</span>
               <span class="hotkey-hint" style="font-size: 7.5px; color: #38bdf8; font-weight: 800; pointer-events: none; line-height: 1.1;">[${k.keyChar}]</span>
@@ -549,7 +553,7 @@ export default (props, { $, $on, $update }) => {
   }
 
   function updateVoiceCountBadge(count) {
-    const badge = document.getElementById('ws-voice-count-badge');
+    const badge = cachedVoiceBadge || document.getElementById('ws-voice-count-badge');
     if (!badge) return;
     badge.textContent = `VOICES: ${count}`;
     if (count > 0) {
@@ -572,9 +576,21 @@ export default (props, { $, $on, $update }) => {
   let cachedTypeBadges = [];
   let cachedFreqKnobs = [];
   let cachedQKnobs = [];
+  let cachedVoiceBadge = null;
+  let cachedPresetBadge = null;
+  let cachedWaveBadge = null;
+  let cachedRackDesc = null;
+  let cachedFpsStat = null;
+  let cachedFtStat = null;
 
   function initElementsCache() {
     cachedPresetBtns = document.querySelectorAll('.preset-btn');
+    cachedVoiceBadge = document.getElementById('ws-voice-count-badge');
+    cachedPresetBadge = document.getElementById('ws-badge-preset');
+    cachedWaveBadge = document.getElementById('ws-badge-wave');
+    cachedRackDesc = document.getElementById('ws-rack-desc');
+    cachedFpsStat = document.getElementById('ws-fps-stat');
+    cachedFtStat = document.getElementById('ws-ft-stat');
     cachedFilterStrips = [];
     cachedBypassBtns = [];
     cachedTypeBadges = [];
@@ -612,20 +628,28 @@ export default (props, { $, $on, $update }) => {
     updateCanvasDimensions();
     window.addEventListener('resize', updateCanvasDimensions);
 
-    let lastDrawTime = 0;
+    let frameCount = 0;
+    let lastFpsUpdateTime = performance.now();
 
     function draw(now) {
       animFrameId = requestAnimationFrame(draw);
 
-      const isPlaying = synthEngine.getActiveVoiceCount() > 0;
-      // Smart throttle: 60 FPS when active, 15 FPS when silent (saves 75% GPU/CPU idle load)
-      const minInterval = isPlaying ? 16 : 66;
-      if (now - lastDrawTime < minInterval) return;
-      lastDrawTime = now;
-
       const w = canvas.width;
       const h = canvas.height;
       if (!w || !h) return;
+
+      // Update live HUD FPS stats every 30 frames (~500ms) with zero overhead
+      frameCount += 1;
+      if (frameCount % 30 === 0) {
+        const delta = now - lastFpsUpdateTime;
+        lastFpsUpdateTime = now;
+        if (delta > 0) {
+          const liveFps = Math.min(120, (30 * 1000) / delta);
+          const liveFt = delta / 30;
+          if (cachedFpsStat) cachedFpsStat.textContent = `${liveFps.toFixed(1)} FPS`;
+          if (cachedFtStat) cachedFtStat.textContent = `${liveFt.toFixed(1)}ms`;
+        }
+      }
 
       synthEngine.analyser.getByteTimeDomainData(dataArray);
 
@@ -671,13 +695,13 @@ export default (props, { $, $on, $update }) => {
     }
 
     // 2. Update rack description text
-    const descEl = document.getElementById('ws-rack-desc');
+    const descEl = cachedRackDesc || document.getElementById('ws-rack-desc');
     if (descEl) descEl.textContent = activePreset.description;
 
     // 3. Update oscilloscope badges
-    const pBadge = document.getElementById('ws-badge-preset');
+    const pBadge = cachedPresetBadge || document.getElementById('ws-badge-preset');
     if (pBadge) pBadge.textContent = activePreset.name;
-    const wBadge = document.getElementById('ws-badge-wave');
+    const wBadge = cachedWaveBadge || document.getElementById('ws-badge-wave');
     if (wBadge) wBadge.textContent = activePreset.waveform.toUpperCase();
 
     // 4. Update waveform buttons
@@ -815,7 +839,7 @@ export default (props, { $, $on, $update }) => {
       }
     });
 
-    const wBadge = document.getElementById('ws-badge-wave');
+    const wBadge = cachedWaveBadge || document.getElementById('ws-badge-wave');
     if (wBadge) wBadge.textContent = w.toUpperCase();
   }
 
@@ -948,37 +972,6 @@ export default (props, { $, $on, $update }) => {
   };
 
   const heldPhysicalKeys = new Map(); // e.code -> note
-  let keyboardRect = null;
-  const activePointers = new Map(); // pointerId -> note
-
-  function getKeyFromCoords(clientX, clientY) {
-    if (!keyboardRect) {
-      const keyboardEl = document.querySelector('.piano-keyboard');
-      if (keyboardEl) keyboardRect = keyboardEl.getBoundingClientRect();
-      if (!keyboardRect) return null;
-    }
-    const { left, top, width, height, right, bottom } = keyboardRect;
-    if (clientX < left || clientX > right || clientY < top || clientY > bottom) {
-      return null;
-    }
-    const relX = (clientX - left) / width;
-    const relY = (clientY - top) / height;
-
-    // Check black keys if in upper 62% of keyboard
-    if (relY <= 0.62) {
-      if (relX >= 0.075 && relX <= 0.170) return blackKeys[0];
-      if (relX >= 0.200 && relX <= 0.295) return blackKeys[1];
-      if (relX >= 0.450 && relX <= 0.545) return blackKeys[2];
-      if (relX >= 0.575 && relX <= 0.670) return blackKeys[3];
-      if (relX >= 0.700 && relX <= 0.795) return blackKeys[4];
-    }
-
-    // Otherwise white key (8 keys evenly distributed)
-    const whiteIdx = Math.max(0, Math.min(7, Math.floor(relX * 8)));
-    return whiteKeys[whiteIdx];
-  }
-
-
 
   function onDirectKeyPointerDown(e, note, freq) {
     if (e) e.preventDefault();
@@ -991,6 +984,16 @@ export default (props, { $, $on, $update }) => {
   }
 
   function onDirectKeyPointerLeave(e, note) {
+    stopNote(note);
+  }
+
+  function onDirectKeyPointerEnter(e, note, freq) {
+    if (e && e.buttons === 1) {
+      playNote(note, freq);
+    }
+  }
+
+  function onDirectKeyPointerCancel(e, note) {
     stopNote(note);
   }
 

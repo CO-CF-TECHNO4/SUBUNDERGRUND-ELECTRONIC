@@ -56,6 +56,13 @@ var app = new Techno4({
   // App routes
   routes: routes,
 
+  // Touch settings: disable activeState and touchRipple to prevent global event hijacking and delay on all clicks/touches
+  touch: {
+    activeState: false,
+    touchRipple: false,
+    tapHold: false,
+    touchHighlight: false,
+  },
 
   // Input settings
   input: {
