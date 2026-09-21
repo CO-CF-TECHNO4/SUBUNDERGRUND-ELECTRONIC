@@ -163,19 +163,20 @@
         <!-- 8 Filter Channel Strips Grid -->
         <div
           class="filter-strips-grid"
-          style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; flex: 1; height: 100%; min-height: 0;"
+          style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; flex: 1; height: 100%; min-height: 0;"
         >
           ${activePreset.filters.map((f, idx) => $h`
             <div
-              class="filter-channel-strip"
-              style="background: ${f.bypass ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.85)'}; border: 1px solid ${f.bypass ? '#cbd5e1' : '#38bdf8'}; border-radius: 6px; padding: 2px 4px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; opacity: ${f.bypass ? 0.55 : 1.0}; transition: all 0.1s ease; overflow: hidden;"
+              class="filter-channel-strip ${f.bypass ? 'is-bypassed' : ''}"
+              key=${`filter-strip-${activePreset.id}-${idx}`}
+              style="background: ${f.bypass ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.85)'}; border: 1px solid ${f.bypass ? '#cbd5e1' : '#38bdf8'}; border-radius: 6px; padding: 3px 2px 2px 2px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; box-sizing: border-box; opacity: ${f.bypass ? 0.42 : 1.0}; transition: all 0.1s ease; overflow: hidden; min-width: 0;"
             >
               <!-- Strip Top: # and Bypass button -->
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
-                <span style="font-size: 10px; font-weight: 800; color: #0f172a;">#${f.id}</span>
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; padding: 0 1px;">
+                <span style="font-size: 9px; font-weight: 800; color: #0f172a;">#${f.id}</span>
                 <button
                   class="button button-small ${f.bypass ? 'color-gray' : 'button-fill color-green'}"
-                  style="height: 15px; line-height: 15px; font-size: 8px; padding: 0 4px; border-radius: 3px; min-width: 22px;"
+                  style="height: 14px; line-height: 14px; font-size: 8px; padding: 0 3px; border-radius: 3px; min-width: 20px;"
                   @click=${() => toggleFilterBypass(idx)}
                 >
                   ${f.bypass ? 'OFF' : 'ON'}
@@ -184,46 +185,52 @@
 
               <!-- Strip Filter Type Badge -->
               <div style="text-align: center; margin: 1px 0; flex-shrink: 0;">
-                <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 8px; padding: 0 3px; height: 13px; line-height: 13px; text-transform: uppercase;">
-                  ${f.type}
+                <span class="badge ${f.bypass ? 'color-gray' : 'color-blue'}" style="font-size: 8px; padding: 0 3px; height: 13px; line-height: 13px; font-weight: 700;">
+                  ${filterTypeLabels[f.type] || f.type.toUpperCase()}
                 </span>
               </div>
 
-              <!-- Value Readout -->
-              <div style="text-align: center; font-size: 9px; font-family: monospace; font-weight: 700; color: #0284c7; margin: 1px 0; flex-shrink: 0; white-space: nowrap; overflow: hidden;">
-                ${f.tracking ? `×${f.freqMult}` : `${f.freqHz >= 1000 ? (f.freqHz/1000).toFixed(1)+'k' : f.freqHz}Hz`}
-              </div>
+              <!-- Circular Slider 1: Frequency / Multiplier -->
+              <div
+                key=${`f-freq-${activePreset.id}-${idx}`}
+                class="round-range-slider round-range-slider-init filter-freq-knob ${f.tracking ? 'freq-tracking' : 'freq-fixed'}"
+                data-index=${idx}
+                data-mode="0+"
+                data-min=${f.tracking ? '0.25' : '30'}
+                data-max=${f.tracking ? '16.0' : '14000'}
+                data-step=${f.tracking ? '0.05' : '10'}
+                data-value=${f.tracking ? f.freqMult : f.freqHz}
+                data-default-value=${f.tracking ? f.freqMult : f.freqHz}
+                data-snap=${f.tracking ? 'true' : 'false'}
+                data-snap-values=${f.tracking ? '[0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 12, 16]' : '[]'}
+                data-snap-threshold=${f.tracking ? '0.18' : '0'}
+                data-title="FREQ"
+                data-unit=${f.tracking ? '×' : 'Hz'}
+                data-size="32"
+                data-stroke-width="3"
+                style="margin: 0 auto !important;"
+              ></div>
 
-              <!-- Freq / Mult slider -->
-              <div style="display: flex; flex-direction: column; align-items: center; margin: 1px 0; flex: 1; justify-content: center;">
-                <span style="font-size: 7px; color: #64748b; line-height: 1;">FREQ</span>
-                <input
-                  type="range"
-                  min=${f.tracking ? "0.5" : "40"}
-                  max=${f.tracking ? "16.0" : "12000"}
-                  step=${f.tracking ? "0.1" : "20"}
-                  value=${f.tracking ? f.freqMult : f.freqHz}
-                  style="width: 100%; height: 3px; margin: 2px 0;"
-                  @input=${(e) => onFilterFreqChange(idx, parseFloat(e.target.value))}
-                />
-              </div>
-
-              <!-- Q Resonance slider -->
-              <div style="display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
-                <div style="display: flex; justify-content: space-between; width: 100%; font-size: 7px; color: #64748b; line-height: 1;">
-                  <span>Q</span>
-                  <span style="font-weight: 700; color: #334155;">${f.q}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="20.0"
-                  step="0.2"
-                  value=${f.q}
-                  style="width: 100%; height: 3px; margin-top: 1px;"
-                  @input=${(e) => onFilterQChange(idx, parseFloat(e.target.value))}
-                />
-              </div>
+              <!-- Circular Slider 2: Resonance Q -->
+              <div
+                key=${`f-q-${activePreset.id}-${idx}`}
+                class="round-range-slider round-range-slider-init filter-q-knob"
+                data-index=${idx}
+                data-mode="0+"
+                data-min="0.5"
+                data-max="18.0"
+                data-step="0.1"
+                data-value=${f.q}
+                data-default-value=${f.q}
+                data-snap="true"
+                data-snap-values="[0.7, 1, 2, 4, 8, 12]"
+                data-snap-threshold="0.3"
+                data-title="Q"
+                data-unit=""
+                data-size="28"
+                data-stroke-width="2.5"
+                style="margin: 0 auto !important;"
+              ></div>
             </div>
           `)}
         </div>
@@ -279,6 +286,17 @@ export default (props, { $, $on, $update }) => {
   let activePreset = synthEngine.getActivePreset();
   let activeVoiceCount = 0;
   const activeKeys = {};
+
+  const filterTypeLabels = {
+    lowpass: 'LP',
+    highpass: 'HP',
+    bandpass: 'BP',
+    notch: 'NOTCH',
+    peaking: 'PEAK',
+    allpass: 'AP',
+    lowshelf: 'LS',
+    highshelf: 'HS',
+  };
 
   const whiteKeys = [
     { note: 'C4', freq: 261.63, keyChar: 'A' },
@@ -365,7 +383,6 @@ export default (props, { $, $on, $update }) => {
       f.freqHz = val;
       synthEngine.updateFilter(idx, { freqHz: val });
     }
-    $update();
   }
 
   function onFilterQChange(idx, val) {
@@ -373,7 +390,6 @@ export default (props, { $, $on, $update }) => {
     if (!f) return;
     f.q = val;
     synthEngine.updateFilter(idx, { q: val });
-    $update();
   }
 
   function setWaveform(w) {
@@ -484,6 +500,21 @@ export default (props, { $, $on, $update }) => {
         const cents = e.target.f7RoundRange.value;
         synthEngine.setDetune(cents);
       }
+    });
+
+    // Bind 8-Filter Modular Rack Knobs via Event Delegation
+    $('.filter-rack-panel').on('roundrange:change change', '.filter-freq-knob', function () {
+      if (!this.f7RoundRange) return;
+      const idx = parseInt(this.getAttribute('data-index'), 10);
+      const val = this.f7RoundRange.value;
+      onFilterFreqChange(idx, val);
+    });
+
+    $('.filter-rack-panel').on('roundrange:change change', '.filter-q-knob', function () {
+      if (!this.f7RoundRange) return;
+      const idx = parseInt(this.getAttribute('data-index'), 10);
+      const val = this.f7RoundRange.value;
+      onFilterQChange(idx, val);
     });
   });
 

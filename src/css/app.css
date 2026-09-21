@@ -34,3 +34,100 @@ p.row:last-child {
 }
 
 /* Your app custom styles here */
+
+/* 8-Filter Modular Rack & Rotary Knobs Styling */
+.filter-rack-panel {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 8px;
+  user-select: none;
+}
+
+.filter-strips-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-channel-strip {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #38bdf8;
+  border-radius: 6px;
+  padding: 3px 2px 2px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: opacity 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.filter-channel-strip.is-bypassed {
+  opacity: 0.42 !important;
+  border-color: #cbd5e1 !important;
+  background: rgba(241, 245, 249, 0.5) !important;
+}
+
+/* Compact Round Range Dials for Channel Strips */
+.filter-channel-strip .round-range-slider {
+  margin: 1px 0 !important;
+  cursor: ns-resize;
+}
+
+.filter-channel-strip .round-range-info {
+  margin-top: 1px !important;
+  line-height: 1 !important;
+}
+
+.filter-channel-strip .round-range-title {
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+  color: #64748b !important;
+  margin-bottom: 0 !important;
+}
+
+.filter-channel-strip .round-range-value {
+  font-size: 8.5px !important;
+  font-weight: 800 !important;
+  font-family: var(--t4-font-mono, monospace) !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+}
+
+/* Color Arcs: Tracking = Cyan, Fixed = Amber, Q = Violet */
+.filter-channel-strip .filter-freq-knob.freq-tracking .round-range-progress {
+  stroke: #0284c7 !important;
+}
+
+.filter-channel-strip .filter-freq-knob.freq-fixed .round-range-progress {
+  stroke: #d97706 !important;
+}
+
+.filter-channel-strip .filter-q-knob .round-range-progress {
+  stroke: #9333ea !important;
+}
+
+/* Mini Dial styling for channel strip knobs */
+.filter-channel-strip .filter-freq-knob .round-range-pointer {
+  top: 2px !important;
+  width: 2.5px !important;
+  height: 6.5px !important;
+}
+
+.filter-channel-strip .filter-q-knob .round-range-pointer {
+  top: 2px !important;
+  width: 2px !important;
+  height: 5.5px !important;
+}
+
+.filter-channel-strip .round-range-tick {
+  stroke: rgba(15, 23, 42, 0.3) !important;
+  stroke-width: 1px !important;
+}

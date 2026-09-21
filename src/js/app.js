@@ -1,6 +1,32 @@
 import $ from 'dom64';
 import Techno4, { getDevice } from 'techno4';
 
+// Smart audio synth formatting for circular knobs (RoundRange)
+if (Techno4.RoundRange) {
+  const origFormat = Techno4.RoundRange.prototype.formatDisplayValue;
+  Techno4.RoundRange.prototype.formatDisplayValue = function (val) {
+    if (typeof this.params.formatValue === 'function') {
+      return this.params.formatValue.call(this, val);
+    }
+    const unit = this.params.unit || '';
+    if (unit === 'Hz') {
+      if (val >= 1000) {
+        return (val / 1000).toFixed(val >= 10000 ? 0 : 1).replace('.0', '') + 'k';
+      }
+      return Math.round(val) + 'Hz';
+    }
+    if (unit === '×' || unit === 'x') {
+      const num = Number(val);
+      return '×' + (num % 1 === 0 ? num.toFixed(0) : (Math.round(num * 10) % 10 === 0 ? num.toFixed(1) : num.toFixed(2)));
+    }
+    if (this.params.title === 'Q') {
+      const num = Number(val);
+      return num % 1 === 0 ? num.toFixed(0) : num.toFixed(1);
+    }
+    return origFormat.call(this, val);
+  };
+}
+
 // Import T4 Styles
 import 'techno4/css';
 

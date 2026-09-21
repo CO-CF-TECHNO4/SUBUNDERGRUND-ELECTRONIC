@@ -50,3 +50,5 @@ www/
 # Automations (shared across developers)
 !automations/
 !automations/**
+automations/*.tmp
+automations/.*.tmp
